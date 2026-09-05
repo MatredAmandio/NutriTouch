@@ -56,17 +56,44 @@ jobs:
           s = s.replace('.toast{position:fixed;z-index:20;', '.toast{position:fixed;z-index:100;')
           leaf = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 7C22 8 10 17 10 30c0 7 5 11 12 11 13 0 20-12 17-34Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><path d="M12 37c7-9 14-15 24-21M24 27v12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>'
           s = s.replace('<div class="logo">N</div>', f'<div class="logo">{leaf}</div>')
-          s = s.replace("document.addEventListener('touchend',function(e){", "document.addEventListener('pointerup',function(e){\\n    if(e.pointerType==='mouse')return;")
-          # Load the modular weekly menu after the original app script so it can override generateMenu().
+          s = s.replace("document.addEventListener('touchend',function(e){", "document.addEventListener('pointerup',function(e){\n    if(e.pointerType==='mouse')return;")
           marker = '<script src="foodbridge.js"></script><script src="menu7.js"></script>'
           if marker not in s:
               s = s.replace('</body>', marker+'</body>')
           p.write_text(s, encoding='utf-8')
+          PY
+      - name: Guarantee fresh start and weekly visual menu
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace("function start(){step=1;go('profile')}","function start(){step=1;day=1;go('profile')}")
+          s=s.replace("const PROFILE_VERSION='2';","const PROFILE_VERSION='3';")
+          if 'NUTRITOUCH-FINAL-UI-FIX' not in s:
+            css='''<style id="NUTRITOUCH-FINAL-UI-FIX">.weekly-hero{position:relative;overflow:hidden;border-radius:22px;margin:14px 0;background:#164B36;color:#fff;min-height:190px;box-shadow:0 10px 28px #164B3620}.weekly-hero img{width:100%;height:190px;display:block;object-fit:cover}.weekly-hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.72) 100%)}.weekly-hero .copy{position:absolute;left:16px;right:16px;bottom:15px;display:flex;justify-content:space-between;align-items:end;gap:12px}.weekly-hero b{font-size:22px}.weekly-hero span{font-size:12px;background:rgba(255,255,255,.16);padding:7px 9px;border-radius:99px}.plate-rule{background:#ECF8EF;border:1px solid #CFE5D4;border-radius:18px;padding:15px;margin:12px 0}.plate-rule b{display:block;color:#164B36;margin-bottom:5px}.plate-rule span{display:block;color:#218C5A;font-weight:800;font-size:13px}.plate-rule small{display:block;color:#66756D;margin-top:6px;line-height:1.45}.weekly-meal{background:#fff;border:1px solid #DCE8DF;border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 6px 18px #164B3608}.weekly-meal h3{margin:0 0 5px}.weekly-meal .desc{color:#66756D;font-size:13px;margin-bottom:9px}.weekly-foods{display:flex;flex-wrap:wrap;gap:6px}.weekly-food{background:#F2F8F3;color:#164B36;border-radius:99px;padding:6px 9px;font-size:12px}.weekly-kcal{font-size:12px;color:#218C5A;font-weight:800;margin-top:9px}</style>'''
+            s=s.replace('</head>',css+'</head>',1)
+            js=r'''<script id="NUTRITOUCH-FINAL-UI-FIX">
+            (function(){
+              const W=[
+              ['Segunda','https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia, banana, iogurte e castanhas',['Aveia em flocos','Banana','Iogurte sem lactose','Castanha de caju'],380],['Almoço','Frango, arroz integral, feijão, brócolis e tomate',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Maçã e castanhas',['Maçã','Castanha de caju'],170],['Jantar','Omelete, batata e vegetais',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate'],420]]],
+              ['Terça','https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Pão integral, ovos, tomate e banana',['Pão integral','Ovo inteiro','Tomate','Banana'],390],['Almoço','Frango, batata, feijão e vegetais',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],540],['Lanche','Iogurte, aveia e maçã',['Iogurte sem lactose','Aveia em flocos','Maçã'],240],['Jantar','Arroz integral, feijão, ovos e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],450]]],
+              ['Quarta','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Tapioca, ovos, tomate e abacate',['Tapioca','Ovo inteiro','Tomate','Abacate'],400],['Almoço','Bowl de frango, arroz integral, feijão e vegetais',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Banana, iogurte e castanhas',['Banana','Iogurte sem lactose','Castanha de caju'],250],['Jantar','Ovos, batata e vegetais',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate'],410]]],
+              ['Quinta','https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia com leite, banana e castanhas',['Aveia em flocos','Leite sem lactose','Banana','Castanha de caju'],400],['Almoço','Frango, batata, feijão e salada',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],550],['Lanche','Maçã com iogurte',['Maçã','Iogurte sem lactose'],170],['Jantar','Ovos, arroz integral, feijão e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],460]]],
+              ['Sexta','https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Pão integral, queijo, ovo, tomate e maçã',['Pão integral','Queijo minas','Ovo inteiro','Tomate','Maçã'],430],['Almoço','Frango, arroz integral, feijão e salada',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Banana e castanhas',['Banana','Castanha de caju'],180],['Jantar','Ovos, batata, vegetais e abacate',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate','Abacate'],450]]],
+              ['Sábado','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Tapioca, ovos, banana e iogurte',['Tapioca','Ovo inteiro','Banana','Iogurte sem lactose'],420],['Almoço','Frango, arroz integral, feijão e vegetais',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],570],['Lanche','Maçã e castanhas',['Maçã','Castanha de caju'],170],['Jantar','Ovos, batata, feijão e vegetais',['Ovo inteiro','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],460]]],
+              ['Domingo','https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia, iogurte, banana e castanhas',['Aveia em flocos','Iogurte sem lactose','Banana','Castanha de caju'],400],['Almoço','Frango assado, batata, feijão e salada',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],570],['Lanche','Iogurte e maçã',['Iogurte sem lactose','Maçã'],160],['Jantar','Arroz integral, feijão, ovos e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],460]]]
+              ];
+              let selected=0;
+              window.generateMenu=function(){const t=document.getElementById('dayTabs'),b=document.getElementById('menuBox'),i=document.getElementById('menuIntro');if(!t||!b)return;const d=W[selected];i.innerHTML='<strong>7 dias • cardápio semanal</strong><br>Alimentos in natura ou minimamente processados, com variedade de vegetais e fontes de proteína.';t.innerHTML=W.map((x,n)=>'<button class="tab '+(n===selected?'active':'')+'" onclick="window.__ntDay('+n+')">'+x[0].slice(0,3)+'</button>').join('');let h='<div class="weekly-hero"><img src="'+d[1]+'" alt="Refeição saudável"><div class="shade"></div><div class="copy"><b>'+d[0]+'</b><span>4 refeições</span></div></div><div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato integral</span><small>Feijão pode compor a parcela de leguminosas. As porções são ajustadas conforme o perfil.</small></div>';d[2].forEach(m=>{h+='<div class="weekly-meal"><h3>'+m[0]+'</h3><div class="desc">'+m[1]+'</div><div class="weekly-foods">'+m[2].map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="weekly-kcal">≈ '+m[3]+' kcal</div></div>'});b.innerHTML=h};window.__ntDay=function(n){selected=n;window.generateMenu();scrollTo(0,0)};window.addEventListener('DOMContentLoaded',function(){step=1;day=1;go('welcome');setTimeout(window.generateMenu,50)});
+            })();</script>'''
+            s=s.replace('</body>',js+'</body>',1)
+            s=s.replace("function start(){step=1;day=1;go('profile')}","function start(){step=1;day=1;go('profile')}")
+          p.write_text(s,encoding='utf-8')
           PY
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'feat: integrate seven-day nutrition menu'
+          git diff --cached --quiet || git commit -m 'fix: restore evaluation start and seven-day visual menu'
           git push
