@@ -1,0 +1,4 @@
+/* Exposes the prototype food table to the modular weekly menu. */
+window.F=[
+['Aveia em flocos','grain',389,16.9,66.3,6.9],['Ovo inteiro','protein',143,12.6,0.7,9.5],['Peito de frango cozido','protein',165,31,0,3.6],['Arroz branco cozido','carb',130,2.7,28.2,.3],['Feijão cozido','legume',76,4.8,13.6,.5],['Banana','fruit',89,1.1,22.8,.3],['Abacate','fat',160,2,8.5,14.7],['Azeite de oliva','fat',884,0,0,100],['Iogurte sem lactose','dairy',61,3.5,4.7,3.3],['Batata cozida','carb',87,1.9,20.1,.1],['Pão integral','grain',247,13,41.4,4.2],['Queijo minas','dairy',264,17.4,3.2,20.8],['Leite sem lactose','dairy',42,3.4,4.8,1],['Maçã','fruit',52,.3,13.8,.2],['Brócolis cozido','veg',35,2.4,7.2,.4],['Tomate','veg',18,.9,3.9,.2],['Castanha de caju','fat',553,18.2,30.2,43.9],['Tapioca','carb',240,.2,59.5,.2]
+];
