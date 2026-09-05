@@ -18,6 +18,7 @@ V1 funcional mobile-first, preparada para GitHub Pages/PWA.
 - preferências, alimentos a evitar, alergias e intolerância à lactose
 - armazenamento local do perfil
 - PWA/offline cache básico
+- controles de questionário compatíveis com toque em Android
 
 ## Segurança
 O motor é determinístico: a camada de interface não altera silenciosamente calorias ou macros. Situações de maior risco podem bloquear a geração automática. A versão atual é um produto V1 técnico e não deve ser apresentada como diagnóstico, prescrição ou substituto de nutricionista/médico.
