@@ -33,17 +33,61 @@ jobs:
           elif old_clean in s:
               s = s.replace(old_clean, new, 1)
 
-          old_css = 'button{cursor:pointer}'
-          new_css = 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}'
+          old_css = 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}'
+          new_css = 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;pointer-events:auto;position:relative;z-index:10}'
           if old_css in s and new_css not in s:
               s = s.replace(old_css, new_css, 1)
 
-          marker = "if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"
-          touch = """(function(){\n  let lastButton=null,lastAt=0;\n  document.addEventListener('touchend',function(e){\n    const b=e.target.closest('button');\n    if(!b||b.disabled)return;\n    lastButton=b;lastAt=Date.now();\n    if(typeof b.onclick==='function')b.onclick();\n  },{passive:true});\n  document.addEventListener('click',function(e){\n    const b=e.target.closest('button');\n    if(b&&b===lastButton&&Date.now()-lastAt<700){\n      e.preventDefault();e.stopImmediatePropagation();lastButton=null;\n    }\n  },true);\n})();\nif('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"""
-          if marker in s and touch not in s:
-              s = s.replace(marker, touch, 1)
-          else:
-              raise SystemExit('Expected app footer marker was not found; no touch fix applied.')
+          old_touch = """(function(){
+  let lastButton=null,lastAt=0;
+  document.addEventListener('touchend',function(e){
+    const b=e.target.closest('button');
+    if(!b||b.disabled)return;
+    lastButton=b;lastAt=Date.now();
+    if(typeof b.onclick==='function')b.onclick();
+  },{passive:true});
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('button');
+    if(b&&b===lastButton&&Date.now()-lastAt<700){
+      e.preventDefault();e.stopImmediatePropagation();lastButton=null;
+    }
+  },true);
+})();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"""
+          new_touch = """(function(){
+  let lastButton=null,lastAt=0;
+  function activate(b){
+    if(!b||b.disabled)return;
+    lastButton=b;lastAt=Date.now();
+    if(typeof b.onclick==='function')b.onclick();
+    else b.click();
+  }
+  document.addEventListener('pointerup',function(e){
+    if(e.pointerType==='mouse')return;
+    const b=e.target.closest('button');
+    if(!b||b.disabled)return;
+    e.preventDefault();
+    activate(b);
+  },{passive:false});
+  document.addEventListener('touchend',function(e){
+    if(window.PointerEvent)return;
+    const b=e.target.closest('button');
+    if(!b||b.disabled)return;
+    e.preventDefault();
+    activate(b);
+  },{passive:false});
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('button');
+    if(b&&b===lastButton&&Date.now()-lastAt<900){
+      e.preventDefault();e.stopImmediatePropagation();lastButton=null;
+    }
+  },true);
+})();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"""
+          if old_touch in s:
+              s = s.replace(old_touch, new_touch, 1)
+          elif new_touch not in s:
+              raise SystemExit('Expected touch handler was not found; no Android fix applied.')
 
           p.write_text(s, encoding='utf-8')
           PY
@@ -53,5 +97,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'fix: improve Android touch controls'
+          git diff --cached --quiet || git commit -m 'fix: use pointer events for Android questionnaire'
           git push
