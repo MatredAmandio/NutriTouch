@@ -27,6 +27,17 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Verify refreshed NutriTouch UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s = Path('index.html').read_text(encoding='utf-8')
+          required = ['#218C5A', 'NutriTouch', '<svg viewBox="0 0 48 48"']
+          missing = [x for x in required if x not in s]
+          if missing:
+              raise SystemExit('Refreshed UI markers missing: ' + ', '.join(missing))
+          print('Refreshed mobile UI verified.')
+          PY
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
