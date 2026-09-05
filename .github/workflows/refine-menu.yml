@@ -1,0 +1,34 @@
+name: Refine NutriTouch weekly menu
+on:
+  push:
+    branches: [main]
+    paths: ['menu7.js','foodbridge.js','.github/workflows/refine-menu.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prefer whole-grain carbohydrate in the plate method
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          m=Path('menu7.js')
+          s=m.read_text(encoding='utf-8')
+          s=s.replace('Arroz branco cozido','Arroz integral cozido')
+          s=s.replace("'Arroz integral cozido':{fiber:1.6,sodium:1}","'Arroz integral cozido':{fiber:2.7,sodium:1}")
+          m.write_text(s,encoding='utf-8')
+          f=Path('foodbridge.js')
+          s=f.read_text(encoding='utf-8')
+          s=s.replace("['Arroz branco cozido','carb',130,2.7,28.2,.3]","['Arroz integral cozido','carb',124,2.6,25.8,1]")
+          f.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add menu7.js foodbridge.js
+          git diff --cached --quiet || git commit -m 'refine: use whole-grain rice in weekly menu'
+          git push
