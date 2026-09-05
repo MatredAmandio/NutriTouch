@@ -1,4 +1,4 @@
-name: Remove personal default data
+name: Android touch fix
 
 on:
   push:
@@ -12,74 +12,17 @@ permissions:
   contents: write
 
 jobs:
-  sanitize:
+  fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Remove seeded personal profile data and improve Android touch handling
+      - uses: actions/checkout@v4
+      - name: Patch Android controls
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          old_seeded = "let d=JSON.parse(localStorage.getItem('nutritouch_profile')||'null')||{age:45,sex:'female',weight:57,height:159,goal:'recomp',resistance:'yes',target:53,deadline:'dezembro',activity:'moderate',meals:4,trainingFreq:5,trainingType:'resistance',trainingMin:60,steps:7000,occupation:'mixed',cook:'moderate',preferences:'',avoid:'',allergies:'',gi:'no',intolerance:'none',condition:'none'};"
-          old_clean = "const EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'',condition:''};\nconst savedProfile=JSON.parse(localStorage.getItem('nutritouch_profile')||'null');\nlet d=savedProfile||{...EMPTY_PROFILE};"
-          new_profile = "const PROFILE_VERSION='2';\nconst EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'none',condition:''};\nconst savedVersion=localStorage.getItem('nutritouch_profile_version');\nconst savedProfile=savedVersion===PROFILE_VERSION?JSON.parse(localStorage.getItem('nutritouch_profile')||'null'):null;\nlet d=savedProfile||{...EMPTY_PROFILE};\nif(savedVersion!==PROFILE_VERSION){localStorage.removeItem('nutritouch_profile');localStorage.setItem('nutritouch_profile_version',PROFILE_VERSION);}"
-          if old_seeded in s:
-              s = s.replace(old_seeded, new_profile, 1)
-          elif old_clean in s:
-              s = s.replace(old_clean, new_profile, 1)
-
-          s = s.replace('button{cursor:pointer}', 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;pointer-events:auto;position:relative;z-index:10}', 1)
-
-          # Remove any previous mobile handler and install one based on Pointer Events.
-          s = re.sub(r"\(function\(\)\{\s*let lastButton=null,lastAt=0;.*?\n\}\)\(\);\s*", '', s, count=1, flags=re.S)
-          marker = "if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"
-          handler = """(function(){
-  let lastButton=null,lastAt=0;
-  function activate(b){
-    if(!b||b.disabled)return;
-    lastButton=b;lastAt=Date.now();
-    if(typeof b.onclick==='function')b.onclick();
-    else b.click();
-  }
-  document.addEventListener('pointerup',function(e){
-    if(e.pointerType==='mouse')return;
-    const b=e.target.closest('button');
-    if(!b||b.disabled)return;
-    e.preventDefault();
-    activate(b);
-  },{passive:false});
-  document.addEventListener('touchend',function(e){
-    if(window.PointerEvent)return;
-    const b=e.target.closest('button');
-    if(!b||b.disabled)return;
-    e.preventDefault();
-    activate(b);
-  },{passive:false});
-  document.addEventListener('click',function(e){
-    const b=e.target.closest('button');
-    if(b&&b===lastButton&&Date.now()-lastAt<900){
-      e.preventDefault();e.stopImmediatePropagation();lastButton=null;
-    }
-  },true);
-})();
-"""
-          if marker not in s:
-              raise SystemExit('App footer marker not found.')
-          s = s.replace(marker, handler + marker, 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Commit changes
+          python -c "from pathlib import Path; p=Path('index.html'); s=p.read_text(encoding='utf-8'); s=s.replace('button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}', 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;pointer-events:auto;position:relative;z-index:10}'); s=s.replace(\"document.addEventListener('touchend',function(e){\", \"document.addEventListener('pointerup',function(e){\\n    if(e.pointerType==='mouse')return;\"); p.write_text(s,encoding='utf-8')"
+      - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'fix: robust Android pointer handling'
+          git diff --cached --quiet || git commit -m 'fix: switch Android taps to pointer events'
           git push
