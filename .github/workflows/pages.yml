@@ -33,11 +33,14 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s = Path('index.html').read_text(encoding='utf-8')
+          m = Path('menu7.js').read_text(encoding='utf-8')
           required = ['#218C5A', 'NutriTouch', '<svg viewBox="0 0 48 48"', 'menu7.js', 'foodbridge.js']
           missing = [x for x in required if x not in s]
           if missing:
               raise SystemExit('Refreshed UI markers missing: ' + ', '.join(missing))
-          print('Refreshed mobile UI and weekly menu verified.')
+          if 'Arroz integral cozido' not in m:
+              raise SystemExit('Whole-grain rice marker missing from weekly menu.')
+          print('Refreshed UI, seven-day menu and whole-grain plate verified.')
           PY
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
