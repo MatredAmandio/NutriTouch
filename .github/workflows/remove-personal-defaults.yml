@@ -18,18 +18,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Remove seeded personal profile data
+      - name: Remove seeded personal profile data and reset old browser data
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          old = "let d=JSON.parse(localStorage.getItem('nutritouch_profile')||'null')||{age:45,sex:'female',weight:57,height:159,goal:'recomp',resistance:'yes',target:53,deadline:'dezembro',activity:'moderate',meals:4,trainingFreq:5,trainingType:'resistance',trainingMin:60,steps:7000,occupation:'mixed',cook:'moderate',preferences:'',avoid:'',allergies:'',gi:'no',intolerance:'none',condition:'none'};"
-          new = "const EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'',condition:''};\nconst savedProfile=JSON.parse(localStorage.getItem('nutritouch_profile')||'null');\nlet d=savedProfile||{...EMPTY_PROFILE};"
-          if old in s:
-              s = s.replace(old, new, 1)
+          old_seeded = "let d=JSON.parse(localStorage.getItem('nutritouch_profile')||'null')||{age:45,sex:'female',weight:57,height:159,goal:'recomp',resistance:'yes',target:53,deadline:'dezembro',activity:'moderate',meals:4,trainingFreq:5,trainingType:'resistance',trainingMin:60,steps:7000,occupation:'mixed',cook:'moderate',preferences:'',avoid:'',allergies:'',gi:'no',intolerance:'none',condition:'none'};"
+          old_clean = "const EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'',condition:''};\nconst savedProfile=JSON.parse(localStorage.getItem('nutritouch_profile')||'null');\nlet d=savedProfile||{...EMPTY_PROFILE};"
+          new = "const PROFILE_VERSION='2';\nconst EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'none',condition:''};\nconst savedVersion=localStorage.getItem('nutritouch_profile_version');\nconst savedProfile=savedVersion===PROFILE_VERSION?JSON.parse(localStorage.getItem('nutritouch_profile')||'null'):null;\nlet d=savedProfile||{...EMPTY_PROFILE};\nif(savedVersion!==PROFILE_VERSION){localStorage.removeItem('nutritouch_profile');localStorage.setItem('nutritouch_profile_version',PROFILE_VERSION);}"
+          if old_seeded in s:
+              s = s.replace(old_seeded, new, 1)
+          elif old_clean in s:
+              s = s.replace(old_clean, new, 1)
           else:
-              raise SystemExit('Expected seeded profile block was not found; no changes made.')
+              raise SystemExit('Expected profile block was not found; no changes made.')
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -38,5 +41,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'fix: remove personal data from app defaults'
+          git diff --cached --quiet || git commit -m 'fix: remove personal data and reset seeded profile'
           git push
