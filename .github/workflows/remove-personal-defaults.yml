@@ -18,12 +18,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Remove seeded personal profile data and reset old browser data
+      - name: Remove seeded personal profile data and improve Android touch handling
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
+
           old_seeded = "let d=JSON.parse(localStorage.getItem('nutritouch_profile')||'null')||{age:45,sex:'female',weight:57,height:159,goal:'recomp',resistance:'yes',target:53,deadline:'dezembro',activity:'moderate',meals:4,trainingFreq:5,trainingType:'resistance',trainingMin:60,steps:7000,occupation:'mixed',cook:'moderate',preferences:'',avoid:'',allergies:'',gi:'no',intolerance:'none',condition:'none'};"
           old_clean = "const EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'',condition:''};\nconst savedProfile=JSON.parse(localStorage.getItem('nutritouch_profile')||'null');\nlet d=savedProfile||{...EMPTY_PROFILE};"
           new = "const PROFILE_VERSION='2';\nconst EMPTY_PROFILE={age:'',sex:'',weight:'',height:'',goal:'',resistance:'',target:'',deadline:'',activity:'',meals:'',trainingFreq:'',trainingType:'',trainingMin:'',steps:'',occupation:'',cook:'',preferences:'',avoid:'',allergies:'',gi:'',intolerance:'none',condition:''};\nconst savedVersion=localStorage.getItem('nutritouch_profile_version');\nconst savedProfile=savedVersion===PROFILE_VERSION?JSON.parse(localStorage.getItem('nutritouch_profile')||'null'):null;\nlet d=savedProfile||{...EMPTY_PROFILE};\nif(savedVersion!==PROFILE_VERSION){localStorage.removeItem('nutritouch_profile');localStorage.setItem('nutritouch_profile_version',PROFILE_VERSION);}"
@@ -31,15 +32,26 @@ jobs:
               s = s.replace(old_seeded, new, 1)
           elif old_clean in s:
               s = s.replace(old_clean, new, 1)
+
+          old_css = 'button{cursor:pointer}'
+          new_css = 'button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}'
+          if old_css in s and new_css not in s:
+              s = s.replace(old_css, new_css, 1)
+
+          marker = "if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"
+          touch = """(function(){\n  let lastButton=null,lastAt=0;\n  document.addEventListener('touchend',function(e){\n    const b=e.target.closest('button');\n    if(!b||b.disabled)return;\n    lastButton=b;lastAt=Date.now();\n    if(typeof b.onclick==='function')b.onclick();\n  },{passive:true});\n  document.addEventListener('click',function(e){\n    const b=e.target.closest('button');\n    if(b&&b===lastButton&&Date.now()-lastAt<700){\n      e.preventDefault();e.stopImmediatePropagation();lastButton=null;\n    }\n  },true);\n})();\nif('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));renderStep();"""
+          if marker in s and touch not in s:
+              s = s.replace(marker, touch, 1)
           else:
-              raise SystemExit('Expected profile block was not found; no changes made.')
+              raise SystemExit('Expected app footer marker was not found; no touch fix applied.')
+
           p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Commit sanitized app
+      - name: Commit changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'fix: remove personal data and reset seeded profile'
+          git diff --cached --quiet || git commit -m 'fix: improve Android touch controls'
           git push
