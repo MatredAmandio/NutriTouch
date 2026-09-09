@@ -196,15 +196,59 @@ function renderResult(){
     '<div class="card small"><h3>Como o cálculo foi tratado</h3><p>Faixa etária suportada: 10–80 anos. Menores de 19 anos usam equações de energia com custo de crescimento. Adultos usam equações específicas por sexo e nível de atividade. A TMB é informativa e não é multiplicada novamente para criar o gasto total.</p></div>';
 }
 function adapt(a){if(d.preferences==='vegetariana')a=a.map((x,i)=>i===1?'Lentilha, arroz integral, feijão e vegetais|150g lentilha • 100g arroz integral • 100g feijão • 200g vegetais|540':x);if(d.preferences==='vegana')a=a.map((x,i)=>i===0?'Aveia, fruta e castanhas|45g aveia • 130g fruta • 20g castanhas|360':i===1?'Grão-de-bico, arroz integral e vegetais|160g grão-de-bico • 120g arroz integral • 250g vegetais|540':x);return a}
+function extraMealsForDay(i){
+  const extras=[
+    ['Fruta com iogurte natural|130g fruta • 170g iogurte natural|180','Leite ou bebida vegetal com fruta|200ml bebida • 90g banana|170'],
+    ['Fruta e sementes|130g fruta • 10g sementes|160','Iogurte natural com canela|170g iogurte natural|140'],
+    ['Fruta com castanhas|120g fruta • 15g castanhas|170','Leite ou bebida vegetal|200ml bebida|120'],
+    ['Iogurte com fruta|170g iogurte • 100g fruta|180','Fruta pequena com sementes|100g fruta • 10g sementes|150'],
+    ['Fruta com pasta de amendoim|120g fruta • 15g pasta de amendoim|190','Iogurte natural|170g iogurte natural|140'],
+    ['Fruta e castanhas|120g fruta • 15g castanhas|180','Bebida vegetal ou leite|200ml bebida|120'],
+    ['Fruta da estação|150g fruta|120','Iogurte ou alternativa vegetal|170g porção|140']
+  ];
+  return extras[i];
+}
+function menuPlanForDay(i,n){
+  const base=adapt([...W[i]]);
+  const extra=extraMealsForDay(i);
+  if(n<=3)return [
+    ['Café da manhã',base[0]],
+    ['Almoço',base[1]],
+    ['Jantar',base[3]]
+  ];
+  if(n===4)return [
+    ['Café da manhã',base[0]],
+    ['Almoço',base[1]],
+    ['Lanche da tarde',base[2]],
+    ['Jantar',base[3]]
+  ];
+  if(n===5)return [
+    ['Café da manhã',base[0]],
+    ['Almoço',base[1]],
+    ['Lanche da tarde',base[2]],
+    ['Jantar',base[3]],
+    ['Ceia',extra[1]]
+  ];
+  return [
+    ['Café da manhã',base[0]],
+    ['Lanche da manhã',extra[0]],
+    ['Almoço',base[1]],
+    ['Lanche da tarde',base[2]],
+    ['Jantar',base[3]],
+    ['Ceia',extra[1]]
+  ];
+}
 function renderMenu(){
-  const n=Math.min(+d.meals||4,4),a=adapt([...W[day]]);
-  $('menuIntro').innerHTML='<strong>7 dias • cardápio semanal</strong><br>Variedade de preparações, porções aproximadas e foco em alimentos in natura ou minimamente processados.';
+  const requested=Number(d.meals)||4;
+  const n=Math.max(3,Math.min(requested,6));
+  const plan=menuPlanForDay(day,n);
+  $('menuIntro').innerHTML='<strong>7 dias • '+n+' refeições por dia</strong><br>O número de refeições acompanha a escolha feita na avaliação, com variedade de preparações, porções aproximadas e foco em alimentos in natura ou minimamente processados.';
   $('dayTabs').innerHTML=DAYS.map((x,i)=>'<button type="button" class="tab '+(i===day?'active':'')+'" data-day="'+i+'">'+x.slice(0,3)+'</button>').join('');
   $('dayTabs').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click',()=>{day=+b.dataset.day;renderMenu();scrollTo(0,0)}));
   let html='<div class="weekly-hero"><img src="https://images.unsplash.com/photo-'+IMG[day]+'?auto=format&fit=crop&w=1200&q=80" alt="Prato saudável representando o cardápio do dia"><div class="shade"></div><div class="copy"><b>'+DAYS[day]+'</b><span>'+n+' refeições</span></div></div><div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato integral/leguminosa</span><small>Referência visual; porções são aproximadas e precisam de individualização quando necessário.</small></div>';
-  a.slice(0,n).forEach((x,i)=>{
+  plan.forEach(([mealName,x])=>{
     const p=x.split('|');
-    html+='<article class="weekly-meal"><div class="mealhead"><div><div class="mealname">'+['Café da manhã','Almoço','Lanche','Jantar'][i]+'</div><div class="desc">'+p[0]+'</div></div><span class="badge">≈ '+p[2]+' kcal</span></div><div class="weekly-foods">'+p[1].split(' • ').map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="portion"><b>Porções aproximadas:</b> quantidades indicadas em gramas; use utensílios caseiros equivalentes conforme necessidade.</div></article>';
+    html+='<article class="weekly-meal"><div class="mealhead"><div><div class="mealname">'+mealName+'</div><div class="desc">'+p[0]+'</div></div><span class="badge">≈ '+p[2]+' kcal</span></div><div class="weekly-foods">'+p[1].split(' • ').map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="portion"><b>Porções aproximadas:</b> quantidades indicadas em gramas; use utensílios caseiros equivalentes conforme necessidade.</div></article>';
   });
   $('menuBox').innerHTML=html;
 }
