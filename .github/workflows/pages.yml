@@ -1,6 +1,5 @@
 name: Deploy NutriTouch to GitHub Pages
 
-# Deploy current main after generated UI/menu commits.
 on:
   push:
     branches: [main]
@@ -16,36 +15,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  verify-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - name: Verify refreshed NutriTouch UI
+      - uses: actions/checkout@v4
+      - name: Verify application
         run: |
           python - <<'PY'
           from pathlib import Path
-          s = Path('index.html').read_text(encoding='utf-8')
-          m = Path('menu7.js').read_text(encoding='utf-8')
-          required = ['#218C5A', 'NutriTouch', '<svg viewBox="0 0 48 48"', 'menu7.js', 'foodbridge.js']
-          missing = [x for x in required if x not in s]
-          if missing:
-              raise SystemExit('Refreshed UI markers missing: ' + ', '.join(missing))
-          if 'Arroz integral cozido' not in m:
-              raise SystemExit('Whole-grain rice marker missing from weekly menu.')
-          print('Refreshed UI, seven-day menu and whole-grain plate verified.')
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'startAssessmentBtn' in s
+          assert 'NutriTouch' in s
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          if len(scripts)!=1:
+              raise SystemExit(f'Expected one application script, found {len(scripts)}')
+          Path('/tmp/app.js').write_text(scripts[0],encoding='utf-8')
           PY
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+          node --check /tmp/app.js
+          node --check sw.js
+          node --check menu7.js
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Deploy
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
