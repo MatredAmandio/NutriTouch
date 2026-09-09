@@ -101,4 +101,103 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
   window.__ntDay=function(i){selected=i;window.generateMenu();window.scrollTo(0,0)};
   window.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if(typeof window.generateMenu==='function')window.generateMenu()},0)});
 })();
+</script>
+<style>
+.menu-v2-note{background:#F4FAF5;border:1px solid #CFE5D4;border-radius:18px;padding:14px;margin:12px 0;font-size:13px;color:#496057}
+.weekly-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.weekly-summary div{background:#fff;border:1px solid #DCE8DF;border-radius:14px;padding:10px;text-align:center;font-size:12px;color:#66756D}
+.weekly-summary b{display:block;color:#164B36;font-size:16px;margin-top:3px}
+.portion{margin-top:9px;padding-top:8px;border-top:1px solid #EDF1F2;font-size:12px;color:#53645B}
+.portion b{color:#164B36}
+</style>
+<script>
+/* NUTRITOUCH MENU ENGINE V2 — deterministic nutrition + controlled variety */
+(function(){
+const NT2={
+  // Initial curated database. Nutrient fields are estimates per serving; production version must use versioned TACO/USDA/PortFIR records.
+  foods:{
+    frango:{n:'Frango grelhado',g:120,m:'1 filé médio',k:198,p:37,c:0,f:4,cat:'protein'},
+    ovos:{n:'Ovos',g:100,m:'2 unidades médias',k:143,p:13,c:1,f:10,cat:'protein'},
+    peixe:{n:'Peixe assado',g:130,m:'1 filé médio',k:190,p:31,c:0,f:7,cat:'protein'},
+    carne:{n:'Carne magra grelhada',g:110,m:'1 bife médio',k:230,p:30,c:0,f:12,cat:'protein'},
+    arroz:{n:'Arroz integral cozido',g:100,m:'≈ ½ xícara ou 4 colheres de sopa',k:124,p:3,c:26,f:1,cat:'carb'},
+    batata:{n:'Batata cozida',g:160,m:'1 unidade média ou 1 xícara em cubos',k:139,p:3,c:32,f:0,cat:'carb'},
+    mandioca:{n:'Mandioca cozida',g:120,m:'≈ ½ xícara ou 4 pedaços médios',k:150,p:1,c:36,f:0,cat:'carb'},
+    quinoa:{n:'Quinoa cozida',g:100,m:'≈ ½ xícara',k:120,p:4,c:21,f:2,cat:'carb'},
+    feijao:{n:'Feijão cozido',g:100,m:'≈ ½ concha média',k:76,p:5,c:14,f:1,cat:'legume'},
+    lentilha:{n:'Lentilha cozida',g:100,m:'≈ ½ concha média',k:116,p:9,c:20,f:0,cat:'legume'},
+    aveia:{n:'Aveia em flocos',g:40,m:'≈ 4 colheres de sopa',k:156,p:7,c:27,f:3,cat:'grain'},
+    tapioca:{n:'Tapioca',g:60,m:'≈ 3 colheres de sopa cheias de goma',k:144,p:0,c:36,f:0,cat:'carb'},
+    cuscuz:{n:'Cuscuz de milho cozido',g:120,m:'≈ 1 xícara',k:134,p:3,c:28,f:1,cat:'carb'},
+    banana:{n:'Banana',g:90,m:'1 unidade média',k:80,p:1,c:21,f:0,cat:'fruit'},
+    maca:{n:'Maçã',g:130,m:'1 unidade média',k:68,p:0,c:18,f:0,cat:'fruit'},
+    iogurte:{n:'Iogurte sem lactose',g:170,m:'1 pote',k:104,p:6,c:8,f:5,cat:'dairy'},
+    castanhas:{n:'Castanhas',g:15,m:'1 colher de sopa cheia ou 1 pequeno punhado',k:83,p:3,c:5,f:7,cat:'fat'},
+    legumes:{n:'Legumes variados',g:180,m:'≈ 2 xícaras',k:75,p:4,c:14,f:1,cat:'veg'},
+    salada:{n:'Salada crua variada',g:150,m:'≈ 2 xícaras',k:40,p:2,c:8,f:0,cat:'veg'},
+    abacate:{n:'Abacate',g:50,m:'≈ 3 colheres de sopa',k:80,p:1,c:4,f:7,cat:'fat'}
+  },
+  days:[
+   {name:'Segunda',img:'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['aveia','banana','iogurte','castanhas']],['Almoço',['salada','frango','arroz','feijao']],['Café da tarde',['maca','castanhas']],['Jantar',['legumes','peixe','batata']]
+   ]},
+   {name:'Terça',img:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['tapioca','ovos','banana']],['Almoço',['legumes','carne','mandioca','lentilha']],['Café da tarde',['iogurte','maca']],['Jantar',['salada','frango','quinoa']]
+   ]},
+   {name:'Quarta',img:'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['cuscuz','ovos','banana']],['Almoço',['salada','peixe','arroz','feijao']],['Café da tarde',['banana','castanhas']],['Jantar',['legumes','carne','batata']]
+   ]},
+   {name:'Quinta',img:'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['aveia','iogurte','maca']],['Almoço',['legumes','frango','quinoa','lentilha']],['Café da tarde',['banana','castanhas']],['Jantar',['salada','ovos','mandioca','feijao']]
+   ]},
+   {name:'Sexta',img:'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['tapioca','ovos','abacate']],['Almoço',['salada','carne','arroz','feijao']],['Café da tarde',['iogurte','banana']],['Jantar',['legumes','peixe','batata']]
+   ]},
+   {name:'Sábado',img:'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['cuscuz','ovos','maca']],['Almoço',['salada','frango','mandioca','feijao']],['Café da tarde',['iogurte','castanhas']],['Jantar',['legumes','carne','quinoa']]
+   ]},
+   {name:'Domingo',img:'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=85',meals:[
+    ['Café da manhã',['aveia','banana','iogurte']],['Almoço',['salada','peixe','batata','lentilha']],['Café da tarde',['maca','castanhas']],['Jantar',['legumes','ovos','arroz','feijao']]
+   ]}
+  ]
+};
+let selected=0;
+function profileTarget(){
+ try{const r=engine(); return {k:Math.max(1200,Math.round(r.kcal)),p:Math.max(60,Math.round(r.p))}}catch(e){return {k:1800,p:100}}
+}
+function mealTotals(keys){
+ return keys.reduce((a,key)=>{const x=NT2.foods[key];a.k+=x.k;a.p+=x.p;a.c+=x.c;a.f+=x.f;return a},{k:0,p:0,c:0,f:0});
+}
+function portionScale(keys,target){
+ const raw=mealTotals(keys); const ratio=Math.max(.75,Math.min(1.55,target/raw.k));
+ return keys.map(key=>{const x=NT2.foods[key];return {...x,g:Math.round(x.g*ratio),k:Math.round(x.k*ratio),p:Math.round(x.p*ratio),c:Math.round(x.c*ratio),f:Math.round(x.f*ratio)});
+}
+function validate(day,target){
+ let total={k:0,p:0};day.meals.forEach((m,i)=>{const s=[.23,.33,.14,.30][i];const foods=portionScale(m[1],target.k*s);foods.forEach(x=>{total.k+=x.k;total.p+=x.p})});
+ return {total,okEnergy:total.k>=target.k*.82&&total.k<=target.k*1.12,okProtein:total.p>=target.p*.70};
+}
+function renderV2(){
+ const tabs=document.getElementById('dayTabs'),box=document.getElementById('menuBox'),intro=document.getElementById('menuIntro');
+ if(!tabs||!box)return;
+ const target=profileTarget(),D=NT2.days[selected],val=validate(D,target);
+ intro.innerHTML='<strong>Menu Engine V2 • 7 dias</strong><br>Variedade controlada, porções práticas e validação nutricional do plano inicial.';
+ tabs.innerHTML=NT2.days.map((x,i)=>'<button class="tab '+(i===selected?'active':'')+'" onclick="window.NT2day('+i+')">'+x.name.slice(0,3)+'</button>').join('');
+ let html='<div class="weekly-hero"><img src="'+D.img+'" alt="Refeição saudável"><div class="shade"></div><div class="copy"><b>'+D.name+'</b><span>4 refeições</span></div></div>';
+ html+='<div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato</span><small>Leguminosas aparecem em alternância ao longo da semana. Priorizamos alimentos in natura ou minimamente processados.</small></div>';
+ html+='<div class="menu-v2-note"><b>Como ler as porções:</b> cada alimento mostra <strong>gramas + medida caseira aproximada</strong>. As medidas caseiras são aproximações para facilitar a rotina e não substituem pesagem quando maior precisão for necessária.</div>';
+ let dayK=0,dayP=0;
+ D.meals.forEach((m,i)=>{
+   const foods=portionScale(m[1],target.k*[.23,.33,.14,.30][i]);
+   const t=foods.reduce((a,x)=>({k:a.k+x.k,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{k:0,p:0,c:0,f:0}); dayK+=t.k;dayP+=t.p;
+   html+='<div class="weekly-meal"><h3>'+m[0]+'</h3><div class="desc">'+foods.map(x=>x.n).join(' + ')+'</div>';
+   foods.forEach(x=>{html+='<div class="portion"><b>'+x.n+'</b><br>'+x.g+' g • '+x.m+'</div>'});
+   html+='<div class="weekly-kcal">≈ '+t.k+' kcal • proteína '+t.p+' g</div></div>';
+ });
+ html+='<div class="weekly-summary"><div>Energia<b>≈ '+dayK+' kcal</b></div><div>Proteína<b>≈ '+dayP+' g</b></div><div>Validação<b>'+(val.okEnergy&&val.okProtein?'✓ inicial':'↻ ajustar')+'</b></div></div>';
+ box.innerHTML=html;
+}
+window.NT2day=function(i){selected=i;renderV2();window.scrollTo(0,0)};
+window.generateMenu=renderV2;
+window.addEventListener('DOMContentLoaded',()=>setTimeout(renderV2,50));
+})();
 </script></body></html>
