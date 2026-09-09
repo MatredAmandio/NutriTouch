@@ -1,4 +1,4 @@
-const CACHE='nutritouch-v5';
+const CACHE='nutritouch-v6';
 const CORE=['./','./index.html','./manifest.json'];
 
 self.addEventListener('install',event=>{
