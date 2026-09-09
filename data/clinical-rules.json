@@ -1,0 +1,1 @@
+{"version":"1.0","rules":[{"id":"CELIAC-001","condition":"celiac","action":"block_contains_gluten_and_unknown_or_cross_contamination_risk"},{"id":"ALLERGY-001","condition":"food_allergy","action":"block_contains_allergen"},{"id":"REVIEW-001","condition":"review_required","action":"show_professional_review_alert"}]}
