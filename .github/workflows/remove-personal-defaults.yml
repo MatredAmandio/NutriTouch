@@ -1,99 +1,19 @@
-name: NutriTouch mobile UI
+name: NutriTouch mobile UI (legacy validation)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'menu7.js'
-      - 'foodbridge.js'
-      - '.github/workflows/remove-personal-defaults.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  polish:
+  validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply mobile UI and Android fixes
+      - name: Validate current application files
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          old = "const PROFILE_VERSION='2';"
-          if old not in s:
-              raise SystemExit('PROFILE_VERSION marker not found')
-
-          s = s.replace(':root{--g:#2A9D8F;--b:#1D3557;--c:#E76F51;--bg:#F8F9FA;--t:#24323D;--m:#66747D;--l:#DCE5E8;--w:#fff;--ok:#166534;--yw:#8A5A00;--rd:#B42318}', ':root{--g:#218C5A;--g2:#2FA66F;--b:#164B36;--c:#E76F51;--bg:#F2F8F3;--t:#26352E;--m:#66756D;--l:#DCE8DF;--w:#fff;--ok:#166534;--yw:#8A5A00;--rd:#B42318}')
-          s = s.replace('body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--t)}', 'body{margin:0;background:linear-gradient(180deg,#F0F8F1 0%,#F7FBF7 52%,#EEF7F0 100%);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--t);-webkit-font-smoothing:antialiased}')
-          s = s.replace('.app{max-width:620px;margin:auto;min-height:100vh;padding-bottom:84px}', '.app{max-width:620px;margin:auto;min-height:100vh;padding-bottom:92px;position:relative}')
-          s = s.replace('.top{padding:18px 20px 8px;display:flex;gap:12px;align-items:center}', '.top{padding:22px 20px 12px;display:flex;gap:12px;align-items:center}')
-          s = s.replace('.logo{width:44px;height:44px;border-radius:14px;background:var(--g);color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px}', '.logo{width:50px;height:50px;border-radius:17px;background:linear-gradient(145deg,var(--g2),var(--g));color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px;box-shadow:0 8px 20px #218C5A2A;flex:0 0 auto}.logo svg{width:30px;height:30px;display:block}')
-          s = s.replace('.brand{font-weight:850;color:var(--b);font-size:20px}', '.brand{font-weight:850;color:var(--b);font-size:21px;letter-spacing:-.3px}')
-          s = s.replace('.tag{font-size:11px;color:var(--m)}', '.tag{font-size:12px;color:var(--m);margin-top:2px}')
-          s = s.replace('main{padding:10px 20px}', 'main{padding:8px 20px}')
-          s = s.replace('.hero{padding-top:42px}', '.hero{padding-top:34px}.hero>h1{letter-spacing:-.8px}.hero>.logo{width:76px;height:76px;border-radius:25px}.hero>.logo svg{width:45px;height:45px}')
-          s = s.replace('h1{font-size:31px;line-height:1.12;color:var(--b);margin:15px 0 10px}', 'h1{font-size:30px;line-height:1.12;color:var(--b);margin:15px 0 10px;letter-spacing:-.7px}')
-          s = s.replace('h2{font-size:23px;color:var(--b);margin:10px 0}', 'h2{font-size:24px;color:var(--b);margin:12px 0 14px;letter-spacing:-.4px}')
-          s = s.replace('p{line-height:1.5;color:var(--m)}', 'p{line-height:1.5;color:var(--m);margin-top:7px}')
-          s = s.replace('.card{background:#fff;border:1px solid var(--l);border-radius:19px;padding:17px;margin:13px 0;box-shadow:0 5px 20px #1730420b}', '.card{background:rgba(255,255,255,.94);border:1px solid var(--l);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 8px 24px #164B3610}')
-          s = s.replace('.btn{width:100%;border:0;border-radius:14px;padding:14px 17px;font-weight:800;margin-top:9px}', '.btn{width:100%;border:0;border-radius:17px;padding:15px 17px;font-weight:800;margin-top:10px;min-height:52px;transition:transform .12s ease,box-shadow .12s ease}.btn:active{transform:scale(.985)}')
-          s = s.replace('.primary{background:var(--g);color:#fff}', '.primary{background:linear-gradient(135deg,var(--g2),var(--g));color:#fff;box-shadow:0 8px 18px #218C5A25}')
-          s = s.replace('.secondary{background:#fff;color:var(--b);border:1px solid var(--l)}', '.secondary{background:#fff;color:var(--b);border:1px solid #BFD5C5;box-shadow:0 4px 12px #164B3608}')
-          s = s.replace('.progress{height:7px;background:#DCEAE8;border-radius:99px;overflow:hidden;margin:9px 0 20px}', '.progress{height:8px;background:#DCE9DF;border-radius:99px;overflow:hidden;margin:10px 0 22px}.progress i{box-shadow:0 0 8px #218C5A40}')
-          s = s.replace('.step{font-size:12px;font-weight:800;color:var(--m)}', '.step{font-size:12px;font-weight:800;color:var(--m);letter-spacing:.2px}')
-          s = s.replace('.opts{display:grid;gap:9px}', '.opts{display:grid;gap:10px}')
-          s = s.replace('.opt{border:1px solid var(--l);border-radius:14px;padding:13px;background:#fff;text-align:left}', '.opt{border:1px solid var(--l);border-radius:18px;padding:15px;background:rgba(255,255,255,.96);text-align:left;box-shadow:0 5px 16px #164B3608;min-height:58px;transition:border-color .12s ease,background .12s ease,transform .12s ease}.opt:active{transform:scale(.995)}')
-          s = s.replace('.opt.sel{border:2px solid var(--g);background:#F0FBF9}', '.opt.sel{border:2px solid var(--g);background:#ECF8EF;box-shadow:0 5px 16px #218C5A18}')
-          s = s.replace('input,select{width:100%;padding:12px;border:1px solid #C9D4D9;border-radius:12px;background:#fff;color:var(--t)}', 'input,select{width:100%;padding:14px;border:1px solid #C7D8CD;border-radius:15px;background:#fff;color:var(--t);min-height:50px}')
-          s = s.replace('.bottom{position:fixed;z-index:5;bottom:0;left:0;right:0;max-width:620px;margin:auto;background:#fff;border-top:1px solid var(--l);display:flex;justify-content:space-around;padding:9px 6px calc(9px + env(safe-area-inset-bottom))}', '.bottom{position:fixed;z-index:50;bottom:0;left:0;right:0;max-width:620px;margin:auto;background:rgba(255,255,255,.97);border-top:1px solid var(--l);box-shadow:0 -8px 24px #164B360B;display:flex;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));backdrop-filter:blur(12px)}')
-          s = s.replace('.bottom button{background:transparent;border:0;color:var(--m);font-size:11px}', '.bottom button{background:transparent;border:0;color:var(--m);font-size:11px;min-width:70px;min-height:46px;border-radius:13px;padding:6px 8px;touch-action:manipulation}')
-          s = s.replace('.bottom button.active{color:var(--g);font-weight:850}', '.bottom button.active{color:var(--g);font-weight:850;background:#ECF8EF}')
-          s = s.replace('.toast{position:fixed;z-index:20;', '.toast{position:fixed;z-index:100;')
-          leaf = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 7C22 8 10 17 10 30c0 7 5 11 12 11 13 0 20-12 17-34Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><path d="M12 37c7-9 14-15 24-21M24 27v12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>'
-          s = s.replace('<div class="logo">N</div>', f'<div class="logo">{leaf}</div>')
-          s = s.replace("document.addEventListener('touchend',function(e){", "document.addEventListener('pointerup',function(e){\n    if(e.pointerType==='mouse')return;")
-          marker = '<script src="foodbridge.js"></script><script src="menu7.js"></script>'
-          if marker not in s:
-              s = s.replace('</body>', marker+'</body>')
-          p.write_text(s, encoding='utf-8')
-          PY
-      - name: Guarantee fresh start and weekly visual menu
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('index.html'); s=p.read_text(encoding='utf-8')
-          s=s.replace("function start(){step=1;go('profile')}","function start(){step=1;day=1;go('profile')}")
-          s=s.replace("const PROFILE_VERSION='2';","const PROFILE_VERSION='3';")
-          if 'NUTRITOUCH-FINAL-UI-FIX' not in s:
-            css='''<style id="NUTRITOUCH-FINAL-UI-FIX">.weekly-hero{position:relative;overflow:hidden;border-radius:22px;margin:14px 0;background:#164B36;color:#fff;min-height:190px;box-shadow:0 10px 28px #164B3620}.weekly-hero img{width:100%;height:190px;display:block;object-fit:cover}.weekly-hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.72) 100%)}.weekly-hero .copy{position:absolute;left:16px;right:16px;bottom:15px;display:flex;justify-content:space-between;align-items:end;gap:12px}.weekly-hero b{font-size:22px}.weekly-hero span{font-size:12px;background:rgba(255,255,255,.16);padding:7px 9px;border-radius:99px}.plate-rule{background:#ECF8EF;border:1px solid #CFE5D4;border-radius:18px;padding:15px;margin:12px 0}.plate-rule b{display:block;color:#164B36;margin-bottom:5px}.plate-rule span{display:block;color:#218C5A;font-weight:800;font-size:13px}.plate-rule small{display:block;color:#66756D;margin-top:6px;line-height:1.45}.weekly-meal{background:#fff;border:1px solid #DCE8DF;border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 6px 18px #164B3608}.weekly-meal h3{margin:0 0 5px}.weekly-meal .desc{color:#66756D;font-size:13px;margin-bottom:9px}.weekly-foods{display:flex;flex-wrap:wrap;gap:6px}.weekly-food{background:#F2F8F3;color:#164B36;border-radius:99px;padding:6px 9px;font-size:12px}.weekly-kcal{font-size:12px;color:#218C5A;font-weight:800;margin-top:9px}</style>'''
-            s=s.replace('</head>',css+'</head>',1)
-            js=r'''<script id="NUTRITOUCH-FINAL-UI-FIX">
-            (function(){
-              const W=[
-              ['Segunda','https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia, banana, iogurte e castanhas',['Aveia em flocos','Banana','Iogurte sem lactose','Castanha de caju'],380],['Almoço','Frango, arroz integral, feijão, brócolis e tomate',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Maçã e castanhas',['Maçã','Castanha de caju'],170],['Jantar','Omelete, batata e vegetais',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate'],420]]],
-              ['Terça','https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Pão integral, ovos, tomate e banana',['Pão integral','Ovo inteiro','Tomate','Banana'],390],['Almoço','Frango, batata, feijão e vegetais',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],540],['Lanche','Iogurte, aveia e maçã',['Iogurte sem lactose','Aveia em flocos','Maçã'],240],['Jantar','Arroz integral, feijão, ovos e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],450]]],
-              ['Quarta','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Tapioca, ovos, tomate e abacate',['Tapioca','Ovo inteiro','Tomate','Abacate'],400],['Almoço','Bowl de frango, arroz integral, feijão e vegetais',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Banana, iogurte e castanhas',['Banana','Iogurte sem lactose','Castanha de caju'],250],['Jantar','Ovos, batata e vegetais',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate'],410]]],
-              ['Quinta','https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia com leite, banana e castanhas',['Aveia em flocos','Leite sem lactose','Banana','Castanha de caju'],400],['Almoço','Frango, batata, feijão e salada',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],550],['Lanche','Maçã com iogurte',['Maçã','Iogurte sem lactose'],170],['Jantar','Ovos, arroz integral, feijão e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],460]]],
-              ['Sexta','https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Pão integral, queijo, ovo, tomate e maçã',['Pão integral','Queijo minas','Ovo inteiro','Tomate','Maçã'],430],['Almoço','Frango, arroz integral, feijão e salada',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],560],['Lanche','Banana e castanhas',['Banana','Castanha de caju'],180],['Jantar','Ovos, batata, vegetais e abacate',['Ovo inteiro','Batata cozida','Brócolis cozido','Tomate','Abacate'],450]]],
-              ['Sábado','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Tapioca, ovos, banana e iogurte',['Tapioca','Ovo inteiro','Banana','Iogurte sem lactose'],420],['Almoço','Frango, arroz integral, feijão e vegetais',['Peito de frango cozido','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],570],['Lanche','Maçã e castanhas',['Maçã','Castanha de caju'],170],['Jantar','Ovos, batata, feijão e vegetais',['Ovo inteiro','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],460]]],
-              ['Domingo','https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=1200&q=85',[['Café da manhã','Aveia, iogurte, banana e castanhas',['Aveia em flocos','Iogurte sem lactose','Banana','Castanha de caju'],400],['Almoço','Frango assado, batata, feijão e salada',['Peito de frango cozido','Batata cozida','Feijão cozido','Brócolis cozido','Tomate'],570],['Lanche','Iogurte e maçã',['Iogurte sem lactose','Maçã'],160],['Jantar','Arroz integral, feijão, ovos e legumes',['Ovo inteiro','Arroz integral cozido','Feijão cozido','Brócolis cozido','Tomate'],460]]]
-              ];
-              let selected=0;
-              window.generateMenu=function(){const t=document.getElementById('dayTabs'),b=document.getElementById('menuBox'),i=document.getElementById('menuIntro');if(!t||!b)return;const d=W[selected];i.innerHTML='<strong>7 dias • cardápio semanal</strong><br>Alimentos in natura ou minimamente processados, com variedade de vegetais e fontes de proteína.';t.innerHTML=W.map((x,n)=>'<button class="tab '+(n===selected?'active':'')+'" onclick="window.__ntDay('+n+')">'+x[0].slice(0,3)+'</button>').join('');let h='<div class="weekly-hero"><img src="'+d[1]+'" alt="Refeição saudável"><div class="shade"></div><div class="copy"><b>'+d[0]+'</b><span>4 refeições</span></div></div><div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato integral</span><small>Feijão pode compor a parcela de leguminosas. As porções são ajustadas conforme o perfil.</small></div>';d[2].forEach(m=>{h+='<div class="weekly-meal"><h3>'+m[0]+'</h3><div class="desc">'+m[1]+'</div><div class="weekly-foods">'+m[2].map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="weekly-kcal">≈ '+m[3]+' kcal</div></div>'});b.innerHTML=h};window.__ntDay=function(n){selected=n;window.generateMenu();scrollTo(0,0)};window.addEventListener('DOMContentLoaded',function(){step=1;day=1;go('welcome');setTimeout(window.generateMenu,50)});
-            })();</script>'''
-            s=s.replace('</body>',js+'</body>',1)
-            s=s.replace("function start(){step=1;day=1;go('profile')}","function start(){step=1;day=1;go('profile')}")
-          p.write_text(s,encoding='utf-8')
-          PY
-      - name: Commit
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git diff --cached --quiet || git commit -m 'fix: restore evaluation start and seven-day visual menu'
-          git push
+          test -f index.html
+          test -f menu7.js
+          test -f foodbridge.js
+          echo "Legacy mobile UI workflow disabled. Current UI is maintained directly in the application source."
