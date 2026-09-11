@@ -46,7 +46,7 @@ assert.equal(mealPlanEligibility({ ...profile, intolerance: 'none' }).allowed, t
 assert.equal(
   isValidatedFood({
     nutrition: { energy_kcal: null, protein_g: null, carbohydrate_g: null, fat_g: null },
-    sources: [{ status: 'quarantined', record_id: null }]
+    sources: [{ source_id: 'USDA_FDC', status: 'quarantined', record_id: null }]
   }),
   false
 );
@@ -54,9 +54,17 @@ assert.equal(
 assert.equal(
   isValidatedFood({
     nutrition: { energy_kcal: 100, protein_g: 4, carbohydrate_g: 15, fat_g: 2 },
-    sources: [{ status: 'verified', record_id: 'source-1' }]
+    sources: [{ source_id: 'USDA_FDC', status: 'verified', record_id: 'source-1' }]
   }),
   true
+);
+
+assert.equal(
+  isValidatedFood({
+    nutrition: { energy_kcal: 100, protein_g: 4, carbohydrate_g: 15, fat_g: 2 },
+    sources: [{ source_id: 'UNLISTED_SOURCE', status: 'verified', record_id: 'source-1' }]
+  }),
+  false
 );
 
 console.log('NutriTouch V16 menu/data tests: OK');
