@@ -6,6 +6,11 @@ const ACCEPTED_SOURCE_RULES = Object.freeze({
     source?.record_id
     && source?.edition === '4ª edição revisada e ampliada'
     && Number(source?.year) === 2011
+  ),
+  TBCA_USP_FORC: source => Boolean(
+    source?.record_id
+    && String(source?.version) === '7.3'
+    && Number(source?.year) === 2025
   )
 });
 
@@ -33,22 +38,28 @@ async function fetchDataset(path) {
   return response.json();
 }
 
+async function fetchOptionalDataset(path) {
+  try {
+    return await fetchDataset(path);
+  } catch (_) {
+    return null;
+  }
+}
+
 export async function loadFoodDatabase() {
   try {
     const core = await fetchDataset('./data/foods.json');
-    let taco = null;
-    try {
-      taco = await fetchDataset('./data/foods-taco.json');
-    } catch (_) {
-      taco = null;
-    }
+    const [taco, expansion] = await Promise.all([
+      fetchOptionalDataset('./data/foods-taco.json'),
+      fetchOptionalDataset('./data/foods-3.3.json')
+    ]);
 
-    const datasets = [core, taco].filter(Boolean);
+    const datasets = [core, taco, expansion].filter(Boolean);
     const foods = datasets.flatMap(data => Array.isArray(data.foods) ? data.foods : []);
     const validated = foods.filter(isValidatedFood);
     const quarantined = foods.filter(food => !isValidatedFood(food));
-    const version = taco?.version || core.version || 'unknown';
-    const status = taco ? 'validated_multi_source_core' : (core.status || 'unknown');
+    const version = expansion?.version || taco?.version || core.version || 'unknown';
+    const status = datasets.length > 1 ? 'validated_multi_source_core' : (core.status || 'unknown');
     const notes = datasets.map(data => data.safety_note).filter(Boolean);
 
     return {
