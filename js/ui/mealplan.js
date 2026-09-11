@@ -1,5 +1,5 @@
 import { DAYS } from '../meals/generator.js';
-import { escapeHTML } from './dom.js';
+import { escapeHTML, formatNumber } from './dom.js';
 
 const PHOTO_LIBRARY = Object.freeze({
   breakfast: 'https://unsplash.com/photos/nTZOILVZuOg/download?force=true&w=1200',
@@ -40,6 +40,16 @@ function mealPhoto(entry, index) {
   </figure>`;
 }
 
+function nutrientLine(nutrients) {
+  if (!nutrients) return '';
+  return `<div class="meal-nutrition" aria-label="Nutrientes calculados da refeição">
+    <strong>${formatNumber(nutrients.energy_kcal)} kcal</strong>
+    <span>P ${formatNumber(nutrients.protein_g, 1)} g</span>
+    <span>C ${formatNumber(nutrients.carbohydrate_g, 1)} g</span>
+    <span>G ${formatNumber(nutrients.fat_g, 1)} g</span>
+  </div>`;
+}
+
 export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetKcal = null, safetyMessage = '' }) {
   if (!Array.isArray(plan) || !plan.length) {
     container.innerHTML = '<div class="card"><p>Cardápio indisponível.</p></div>';
@@ -52,11 +62,16 @@ export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetK
     </button>`).join('');
 
   const day = plan[selectedDay] || plan[0];
+  const quantified = day.nutrientStatus === 'validated-food-calculation';
+  const daily = day.nutrients;
   container.innerHTML = `
     <div class="card menu-status">
       <strong>${escapeHTML(day.day)}</strong>
-      <p>${targetKcal ? `Meta energética do perfil: ${Math.round(targetKcal)} kcal/dia. ` : ''}O cardápio V16 ainda não atribui calorias às refeições enquanto os ingredientes não estiverem ligados a registros nutricionais validados.</p>
-      <div class="menu-photo-note">As fotos são referências visuais dos pratos indicados e não representam porções ou valores nutricionais calculados.</div>
+      <p>${quantified
+        ? `Porções calculadas a partir de alimentos validados. ${targetKcal ? `Meta do perfil: ${Math.round(targetKcal)} kcal/dia. ` : ''}Total planejado para o dia: ${formatNumber(daily?.energy_kcal || 0)} kcal.`
+        : `${targetKcal ? `Meta energética do perfil: ${Math.round(targetKcal)} kcal/dia. ` : ''}Esta rotação ainda é estrutural e não atribui calorias às refeições.`}
+      </p>
+      <div class="menu-photo-note">As fotos são referências visuais dos pratos indicados e não representam porções exatas.</div>
     </div>
     ${safetyMessage ? `<div class="alert warning"><strong>Atenção às restrições</strong><br>${escapeHTML(safetyMessage)}</div>` : ''}
     ${day.meals.map((entry, index) => {
@@ -66,12 +81,16 @@ export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetK
         <div class="meal-body">
           <div class="meal-header">
             <span>${escapeHTML(entry.label)}${entry.role ? ` <b class="meal-role">${escapeHTML(entry.role)}</b>` : ''}</span>
-            <small>${blocked ? 'revisão necessária' : 'estrutura de refeição'}</small>
+            <small>${blocked ? 'revisão necessária' : (quantified ? 'porções calculadas' : 'estrutura de refeição')}</small>
           </div>
           <h3>${escapeHTML(entry.meal.title)}</h3>
+          ${nutrientLine(entry.nutrients)}
           <div class="chips">${entry.meal.components.map(component => `<span>${escapeHTML(component)}</span>`).join('')}</div>
         </div>
       </article>`;
     }).join('')}
-    <p class="helper">Sem calorias inventadas: cálculos por refeição só serão liberados quando a base de alimentos tiver composição e proveniência validadas.</p>`;
+    <p class="helper">${quantified
+      ? 'Cálculos feitos somente com registros de composição nutricional validados e rastreáveis. Ajustes clínicos continuam fora do escopo do gerador automático.'
+      : 'Sem calorias inventadas: cálculos por refeição só aparecem quando todos os ingredientes da receita estão vinculados a registros nutricionais validados.'}
+    </p>`;
 }
