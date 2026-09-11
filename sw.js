@@ -1,9 +1,10 @@
-const CACHE = 'nutritouch-v16';
+const CACHE = 'nutritouch-v16-2';
 const CORE = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon.svg',
+  './icons/icon-maskable.svg',
   './css/tokens.css',
   './css/components.css',
   './css/mobile.css',
@@ -40,6 +41,14 @@ self.addEventListener('activate', event => {
   );
 });
 
+async function cacheSuccessful(request, response) {
+  if (response?.ok) {
+    const cache = await caches.open(CACHE);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -48,11 +57,7 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put('./index.html', copy));
-          return response;
-        })
+        .then(response => cacheSuccessful('./index.html', response))
         .catch(() => caches.match('./index.html'))
     );
     return;
@@ -61,11 +66,7 @@ self.addEventListener('fetch', event => {
   if (url.pathname.endsWith('/data/foods.json')) {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, copy));
-          return response;
-        })
+        .then(response => cacheSuccessful(event.request, response))
         .catch(() => caches.match(event.request))
     );
     return;
@@ -73,11 +74,7 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.match(event.request).then(cached => {
-      const network = fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE).then(cache => cache.put(event.request, copy));
-        return response;
-      });
+      const network = fetch(event.request).then(response => cacheSuccessful(event.request, response));
       return cached || network;
     })
   );
