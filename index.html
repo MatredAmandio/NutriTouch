@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./css/tokens.css">
   <link rel="stylesheet" href="./css/components.css">
   <link rel="stylesheet" href="./css/photos.css">
+  <link rel="stylesheet" href="./css/food-engine.css">
   <link rel="stylesheet" href="./css/mobile.css">
   <title>NutriTouch</title>
 </head>
@@ -87,7 +88,7 @@
       <section id="menu" class="screen">
         <span class="welcome-kicker">Comida real, no seu ritmo</span>
         <h1>Seu cardápio</h1>
-        <p>Uma estrutura semanal visual e acolhedora, sem inventar dados nutricionais.</p>
+        <p>Uma estrutura semanal visual e acolhedora, com porções calculadas somente quando os ingredientes possuem dados nutricionais validados.</p>
         <div class="day-tabs" id="dayTabs"></div>
         <div id="menuBox"></div>
         <button class="secondary-button" id="refreshMenu">↻ Gerar outra rotação</button>
@@ -96,9 +97,9 @@
       <section id="foods" class="screen">
         <span class="welcome-kicker">Base segura</span>
         <h1>Alimentos</h1>
-        <p>Identidade alimentar é diferente de dado nutricional apto para cálculo — aqui você vê essa diferença com clareza.</p>
+        <p>Consulte energia, macros, fibra, sódio e a fonte de cada alimento liberado para cálculo.</p>
         <div class="database-note" id="foodDbStatus">Carregando base...</div>
-        <input id="foodSearch" class="search-input" placeholder="Buscar alimento..." autocomplete="off">
+        <input id="foodSearch" class="search-input" placeholder="Buscar alimento ou grupo..." autocomplete="off">
         <div id="foodBox"></div>
       </section>
 
