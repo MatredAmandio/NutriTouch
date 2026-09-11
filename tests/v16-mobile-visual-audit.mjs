@@ -11,7 +11,7 @@ const browser = ['google-chrome','google-chrome-stable','chromium','chromium-bro
 if (!browser) throw new Error('Chrome/Chromium not found');
 
 const proc = spawn(browser,[
-  '--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+  '--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--disable-extensions',
   '--remote-debugging-port=9333','about:blank'
 ],{stdio:'ignore'});
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -20,11 +20,12 @@ async function socketUrl(){
   for(let i=0;i<80;i++){
     try{
       const pages=await fetch('http://127.0.0.1:9333/json/list').then(r=>r.json());
-      if(pages[0]?.webSocketDebuggerUrl) return pages[0].webSocketDebuggerUrl;
+      const page = pages.find(p=>p.type==='page' && !String(p.url||'').startsWith('chrome-extension://'));
+      if(page?.webSocketDebuggerUrl) return page.webSocketDebuggerUrl;
     }catch{}
     await sleep(75);
   }
-  throw new Error('DevTools unavailable');
+  throw new Error('DevTools page target unavailable');
 }
 
 const ws = new WebSocket(await socketUrl());
