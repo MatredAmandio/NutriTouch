@@ -22,12 +22,15 @@ export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetK
     ${day.meals.map(entry => {
       const blocked = (entry.meal.flags || []).includes('blocked');
       return `<article class="meal-card${blocked ? ' blocked-meal' : ''}">
-        <div class="meal-header">
-          <span>${escapeHTML(entry.label)}${entry.role ? ` <b class="meal-role">${escapeHTML(entry.role)}</b>` : ''}</span>
-          <small>${blocked ? 'revisão necessária' : 'estrutura de refeição'}</small>
+        <div class="meal-visual" role="img" aria-label="Ilustração de refeição equilibrada"></div>
+        <div class="meal-body">
+          <div class="meal-header">
+            <span>${escapeHTML(entry.label)}${entry.role ? ` <b class="meal-role">${escapeHTML(entry.role)}</b>` : ''}</span>
+            <small>${blocked ? 'revisão necessária' : 'estrutura de refeição'}</small>
+          </div>
+          <h3>${escapeHTML(entry.meal.title)}</h3>
+          <div class="chips">${entry.meal.components.map(component => `<span>${escapeHTML(component)}</span>`).join('')}</div>
         </div>
-        <h3>${escapeHTML(entry.meal.title)}</h3>
-        <div class="chips">${entry.meal.components.map(component => `<span>${escapeHTML(component)}</span>`).join('')}</div>
       </article>`;
     }).join('')}
     <p class="helper">Sem calorias inventadas: cálculos por refeição só serão liberados quando a base de alimentos tiver composição e proveniência validadas.</p>`;
