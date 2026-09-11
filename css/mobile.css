@@ -1,0 +1,14 @@
+@media (max-width:420px){
+  main{padding-left:16px;padding-right:16px}
+  .topbar{padding-left:16px;padding-right:16px}
+  h1{font-size:28px}
+  .field-row{gap:8px}
+  .flow-card{grid-template-columns:1fr;gap:7px}
+  .flow-arrow{transform:rotate(90deg);text-align:center}
+  .history-metrics{grid-template-columns:1fr 1fr}
+}
+@media (min-width:560px){
+  .option-grid{grid-template-columns:1fr 1fr}
+  .day-tabs{overflow:visible}
+  .day-tab{flex:1;text-align:center}
+}
