@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-4';
+const CACHE = 'nutritouch-v16-5';
 const CORE = [
   './',
   './index.html',
@@ -30,7 +30,8 @@ const CORE = [
   './js/ui/mealplan.js',
   './js/ui/foods.js',
   './js/ui/evolution.js',
-  './data/foods.json'
+  './data/foods.json',
+  './data/foods-taco.json'
 ];
 
 self.addEventListener('install', event => {
@@ -68,7 +69,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.pathname.endsWith('/data/foods.json')) {
+  if (url.pathname.endsWith('/data/foods.json') || url.pathname.endsWith('/data/foods-taco.json')) {
     event.respondWith(
       fetch(event.request)
         .then(response => cacheSuccessful(event.request, response))
