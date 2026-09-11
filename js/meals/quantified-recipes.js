@@ -37,6 +37,30 @@ export const QUANTIFIED_RECIPES = [
   recipe('q-b10','Ovos com batata-doce, tomate e mamão','breakfast',[
     {foodId:'USDA-173424',grams:100},{foodId:'USDA-168484',grams:200},{foodId:'USDA-170457',grams:100},{foodId:'USDA-169926',grams:100}
   ],{diets:['omnivore','vegetarian'],flags:['egg'],styles:['brasileira','fitness','vegetariana']}),
+  recipe('q-b11','Pão francês com ovos e mamão','breakfast',[
+    {foodId:'TACO-2011-053',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-169926',grams:120}
+  ],{diets:['omnivore'],flags:['egg','gluten','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-b12','Pão integral com ovos e tomate','breakfast',[
+    {foodId:'TACO-2011-052',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-170457',grams:100}
+  ],{diets:['omnivore'],flags:['egg','gluten','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-b13','Pão de milho com ovos e mamão','breakfast',[
+    {foodId:'TACO-2011-051',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-169926',grams:120}
+  ],{diets:['omnivore'],flags:['egg','gluten_unknown','lactose_unknown'],styles:['brasileira']}),
+  recipe('q-b14','Pão de aveia com ovos e banana','breakfast',[
+    {foodId:'TACO-2011-048',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-173944',grams:100}
+  ],{diets:['omnivore'],flags:['egg','gluten_unknown','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-b15','Pão de soja com ovos e mamão','breakfast',[
+    {foodId:'TACO-2011-049',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-169926',grams:120}
+  ],{diets:['omnivore'],flags:['egg','soy','gluten_unknown','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-b16','Pão sovado com ovos e mamão','breakfast',[
+    {foodId:'TACO-2011-054',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-169926',grams:120}
+  ],{diets:['omnivore'],flags:['egg','gluten','lactose_unknown'],styles:['brasileira']}),
+  recipe('q-b17','Pão de glúten com ovos e tomate','breakfast',[
+    {foodId:'TACO-2011-050',grams:70},{foodId:'USDA-173424',grams:100},{foodId:'USDA-170457',grams:100}
+  ],{diets:['omnivore'],flags:['egg','gluten','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-b18','Pão de queijo assado com mamão','breakfast',[
+    {foodId:'TACO-2011-140',grams:70},{foodId:'USDA-169926',grams:120}
+  ],{diets:['omnivore'],flags:['dairy','gluten_unknown','lactose_unknown'],styles:['brasileira']}),
 
   // Almoço
   recipe('q-l1','Frango, arroz integral, feijão e brócolis','lunch',[
@@ -119,6 +143,15 @@ export const QUANTIFIED_RECIPES = [
   recipe('q-s8','Fubá cozido com iogurte e mamão','snack',[
     {foodId:'USDA-2708374',grams:180},{foodId:'USDA-171284',grams:150},{foodId:'USDA-169926',grams:100}
   ],{diets:['omnivore','vegetarian'],flags:['lactose'],styles:['brasileira','vegetariana']}),
+  recipe('q-s9','Torrada de pão francês com ovo e tomate','snack',[
+    {foodId:'TACO-2011-063',grams:45},{foodId:'USDA-173424',grams:70},{foodId:'USDA-170457',grams:100}
+  ],{diets:['omnivore'],flags:['egg','gluten_unknown','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-s10','Pão integral com banana','snack',[
+    {foodId:'TACO-2011-052',grams:55},{foodId:'USDA-173944',grams:100}
+  ],{diets:['omnivore'],flags:['gluten','lactose_unknown'],styles:['brasileira','fitness']}),
+  recipe('q-s11','Pão de milho com banana','snack',[
+    {foodId:'TACO-2011-051',grams:55},{foodId:'USDA-173944',grams:100}
+  ],{diets:['omnivore'],flags:['gluten_unknown','lactose_unknown'],styles:['brasileira']}),
 
   // Jantar
   recipe('q-d1','Frango, batata, brócolis e cenoura','dinner',[
