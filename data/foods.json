@@ -1,1 +1,57 @@
-{"version":"1.0","foods":[{"id":"NT-BR-000001","name":"Arroz integral cozido","aliases":["arroz integral"],"food_state":"cooked","processing_level":"minimally_processed","nutrition":{"basis_g":100,"energy_kcal":124,"protein_g":2.6,"carbohydrate_g":25.8,"fiber_g":2.7,"fat_g":1,"sodium_mg":2},"sources":[{"source_id":"TACO","status":"reference_mapping_pending"}],"diet_compatibility":{"vegan":"allowed","vegetarian":"allowed","gluten":"naturally_gluten_free","lactose":"naturally_lactose_free"},"allergens":[],"household_measures":[{"label":"1/2 xícara","grams":100},{"label":"4 colheres de sopa","grams":100}],"tags":["whole_grain","gluten_free_natural","vegan","brazilian_food"]}]}
+{
+  "version": "2.0.0",
+  "status": "foundation_quarantine_mode",
+  "basis": "100 g edible portion",
+  "safety_note": "Records without verified record-level provenance are not eligible for nutrient calculations. Seed food identities may be used for classification and UI only until verified.",
+  "foods": [
+    {
+      "id": "NT-BR-000001",
+      "name": "Arroz integral cozido",
+      "aliases": [
+        "arroz integral"
+      ],
+      "group": "cereal",
+      "food_state": "cooked",
+      "processing_level": "minimally_processed",
+      "nutrition": {
+        "basis_g": 100,
+        "energy_kcal": null,
+        "protein_g": null,
+        "carbohydrate_g": null,
+        "fiber_g": null,
+        "fat_g": null,
+        "sodium_mg": null
+      },
+      "sources": [
+        {
+          "source_id": "TBCA",
+          "record_id": null,
+          "status": "quarantined",
+          "accessed_at": "2026-09-11"
+        }
+      ],
+      "diet_compatibility": {
+        "omnivore": "allowed",
+        "vegetarian": "allowed",
+        "vegan": "allowed",
+        "gluten_free": "naturally_gluten_free",
+        "lactose_free": "naturally_lactose_free"
+      },
+      "restrictions": [],
+      "allergens": [],
+      "household_measures": [
+        {
+          "label": "porção doméstica",
+          "grams": 100,
+          "note": "Equivalência caseira precisa de validação específica antes de exibição clínica"
+        }
+      ],
+      "tags": [
+        "whole_grain",
+        "gluten_free_natural",
+        "vegan",
+        "brazilian_food"
+      ]
+    }
+  ]
+}
