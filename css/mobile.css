@@ -1,0 +1,33 @@
+@media (max-width:420px){
+  main{padding-left:16px;padding-right:16px}
+  .topbar{padding-left:16px;padding-right:16px}
+  .brandmark{width:44px;height:44px}
+  .brandname{font-size:21px}
+  .tagline{font-size:10px}
+  h1{font-size:29px}
+  h2{font-size:24px}
+  .welcome-hero{padding:22px 16px 16px;border-radius:26px}
+  .hero-illustration{height:182px;border-radius:21px}
+  .welcome-benefits{gap:6px}
+  .welcome-benefit{padding:9px 5px;font-size:10px}
+  .field-row{gap:8px}
+  .flow-card{grid-template-columns:1fr;gap:7px;text-align:center}
+  .flow-arrow{transform:rotate(90deg);text-align:center}
+  .history-metrics{grid-template-columns:1fr 1fr}
+  .quick-grid{gap:7px}
+  .quick-card{padding:11px 5px;font-size:10px}
+  .meal-visual{height:116px}
+}
+@media (max-width:350px){
+  .field-row{display:block}
+  .welcome-benefits{grid-template-columns:1fr}
+  .welcome-benefit{display:flex;align-items:center;justify-content:center;gap:7px}
+  .welcome-benefit b{margin:0}
+}
+@media (min-width:560px){
+  .option-grid{grid-template-columns:1fr 1fr}
+  .day-tabs{overflow:visible}
+  .day-tab{flex:1;text-align:center}
+  .welcome-hero{padding:30px 26px 22px}
+  .hero-illustration{height:240px}
+}

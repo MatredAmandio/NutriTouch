@@ -1,1 +1,45 @@
-{"name":"NutriTouch","short_name":"NutriTouch","start_url":"./","display":"standalone","background_color":"#F8F9FA","theme_color":"#2A9D8F","lang":"pt-BR","description":"A ciência da nutrição, no seu ritmo."}
+{
+  "id": "./",
+  "name": "NutriTouch",
+  "short_name": "NutriTouch",
+  "description": "A ciência da nutrição, no seu ritmo.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#F8F1E7",
+  "theme_color": "#2F6B49",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cardápio",
+      "short_name": "Cardápio",
+      "description": "Abrir a estrutura semanal de refeições",
+      "url": "./?screen=menu",
+      "icons": [{"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml"}]
+    },
+    {
+      "name": "Evolução",
+      "short_name": "Evolução",
+      "description": "Registrar peso e medidas",
+      "url": "./?screen=evolution",
+      "icons": [{"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml"}]
+    }
+  ]
+}
