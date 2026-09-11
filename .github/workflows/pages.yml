@@ -3,6 +3,8 @@ name: Deploy NutriTouch to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -11,14 +13,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  verify-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,12 +31,23 @@ jobs:
           assert 'NutriTouch' in s
           scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
           if len(scripts)!=1:
-              raise SystemExit(f'Expected one application script, found {len(scripts)}')
+              raise SystemExit(f'Expected one legacy application script during V16 migration, found {len(scripts)}')
           Path('/tmp/app.js').write_text(scripts[0],encoding='utf-8')
           PY
           node --check /tmp/app.js
           node --check sw.js
           node --check menu7.js
+          node tests/v16-engine.test.mjs
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
         with:
           enablement: true
