@@ -3,6 +3,22 @@
  * o gerador bloqueia a sugestão em vez de ignorar a restrição.
  */
 
+export function mealPlanEligibility(profile) {
+  if (profile.intolerance === 'fructose') {
+    return {
+      allowed: false,
+      reason: 'Intolerância à frutose exige avaliação individual de tolerância, porções e combinações. O NutriTouch não gera cardápio automático para este caso.'
+    };
+  }
+  if (profile.intolerance === 'other') {
+    return {
+      allowed: false,
+      reason: 'A intolerância informada não possui regras específicas validadas no gerador atual. Revise o plano com profissional habilitado.'
+    };
+  }
+  return { allowed: true, reason: '' };
+}
+
 export function isMealCompatible(meal, profile) {
   const flags = new Set(meal.flags || []);
   const preference = profile.preferences || 'brasileira';
