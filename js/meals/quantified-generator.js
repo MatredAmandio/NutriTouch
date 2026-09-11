@@ -48,10 +48,11 @@ function normalizedTerms(profile) {
 function recipeCompatible(recipe, profile, foodIndex) {
   const preference = profile.preferences || 'brasileira';
   const diet = preference === 'vegana' ? 'vegan' : preference === 'vegetariana' ? 'vegetarian' : 'omnivore';
+  const flags = new Set(recipe.flags || []);
   if (!(recipe.diets || []).includes(diet)) return false;
-  if (profile.intolerance === 'lactose' && (recipe.flags || []).includes('lactose')) return false;
+  if (profile.intolerance === 'lactose' && (flags.has('lactose') || flags.has('lactose_unknown'))) return false;
   const glutenRestricted = preference === 'sem-gluten' || ['gluten_intolerance','ncgs'].includes(profile.intolerance);
-  if (glutenRestricted && (recipe.flags || []).includes('oats')) return false;
+  if (glutenRestricted && (flags.has('oats') || flags.has('gluten') || flags.has('gluten_unknown'))) return false;
 
   const terms = normalizedTerms(profile);
   if (!terms.length) return true;
