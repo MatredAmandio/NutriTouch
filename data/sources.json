@@ -1,1 +1,51 @@
-{"version":"1.0","sources":[{"id":"TACO","name":"Tabela Brasileira de Composição de Alimentos","scope":"Brazilian foods","priority":1},{"id":"USDA_FDC","name":"USDA FoodData Central","scope":"International foods","priority":2},{"id":"PORTFIR","name":"PortFIR","scope":"Portuguese/European foods","priority":3},{"id":"FAO_INFOODS","name":"FAO/INFOODS","scope":"Interoperability and composition references","priority":4}]}
+{
+  "version": "2.0.0",
+  "source_policy": {
+    "numeric_nutrients": "Only import or manually curate from an allowed source with record-level provenance.",
+    "source_priority": [
+      "authorized_Brazilian_source",
+      "USDA_FDC",
+      "other_documented_authoritative_source"
+    ],
+    "mixing_rule": "Do not silently combine nutrient values from different source records into one food record.",
+    "license_rule": "Respect source licensing and attribution; do not bulk-copy restricted databases.",
+    "api_secret_rule": "Never commit API keys to GitHub.",
+    "validation": "Schema validation, provenance check and plausibility check before production use."
+  },
+  "sources": [
+    {
+      "id": "TBCA",
+      "name": "Tabela Brasileira de Composição de Alimentos",
+      "scope": "Brazilian foods",
+      "priority": 1,
+      "url": "https://www.tbca.net.br/",
+      "use": "Lookup and provenance mapping subject to source terms.",
+      "license_note": "Do not bulk-copy or redistribute restricted content without an authorized path; current site pages indicate reproduction/commercial restrictions."
+    },
+    {
+      "id": "USDA_FDC",
+      "name": "USDA FoodData Central",
+      "scope": "International foods",
+      "priority": 2,
+      "url": "https://fdc.nal.usda.gov/",
+      "use": "API/import workflows with record IDs and attribution.",
+      "license_note": "Official API guide states public-domain/CC0 use; API keys must remain secret."
+    },
+    {
+      "id": "FAO_INFOODS",
+      "name": "FAO/INFOODS",
+      "scope": "Interoperability, terminology and data-quality guidance",
+      "priority": 3,
+      "url": "https://www.fao.org/infoods",
+      "use": "Standards and validation guidance, not automatic nutrient provenance."
+    },
+    {
+      "id": "BRAZIL_DIETARY_GUIDE",
+      "name": "Guia Alimentar para a População Brasileira",
+      "scope": "Dietary pattern and processing guidance",
+      "priority": 4,
+      "url": "https://www.gov.br/saude/pt-br/composicao/saps/promocao-da-saude/guias-alimentares",
+      "use": "Food-processing and dietary-pattern guidance, not nutrient composition values."
+    }
+  ]
+}
