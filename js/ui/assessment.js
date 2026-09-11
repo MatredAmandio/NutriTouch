@@ -1,5 +1,10 @@
 import { escapeHTML } from './dom.js';
 
+const GOALS = new Set(['recomp', 'loss', 'gain', 'maintenance']);
+const PREFERENCES = new Set(['brasileira', 'mediterranea', 'vegetariana', 'vegana', 'sem-gluten', 'fitness']);
+const INTOLERANCES = new Set(['none', 'lactose', 'gluten_intolerance', 'fructose', 'ncgs', 'other']);
+const CONDITIONS = new Set(['', 'diabetes', 'hypertension', 'pregnancy', 'elderly']);
+
 function selected(profile, key, value) {
   return String(profile[key]) === String(value) ? ' selected' : '';
 }
@@ -32,6 +37,8 @@ export function renderAssessment(container, step, profile) {
   }
 
   if (step === 2) {
+    const maintenance = profile.goal === 'maintenance';
+    const optionalRecomp = profile.goal === 'recomp';
     html = `<h2>Seu objetivo</h2>
       <div class="option-grid">
         ${optionCard(profile,'goal','recomp','Recomposição corporal','Reduzir gordura preservando ou ganhando massa magra.')}
@@ -45,11 +52,13 @@ export function renderAssessment(container, step, profile) {
           <option value="no"${selected(profile,'resistance','no')}>Não</option>
         </select>
       </label>
-      <div class="field-row">
-        <label>Peso-alvo (kg)<input data-field="target" type="number" step="0.1" value="${safe('target')}"></label>
-        <label>Prazo em meses<input data-field="deadline" type="number" min="1" step="1" placeholder="Ex.: 3" value="${safe('deadline')}"></label>
-      </div>
-      <p class="helper">Você continua informando apenas o número de meses. A V16 transforma esse prazo em uma data-alvo real do calendário.</p>`;
+      ${maintenance ? `
+        <div class="card compact-card"><strong>Manutenção selecionada</strong><p class="helper">Peso-alvo e prazo não são necessários. A meta energética parte do gasto estimado.</p></div>` : `
+        <div class="field-row">
+          <label>Peso-alvo (kg)<input data-field="target" type="number" min="20" max="350" step="0.1" value="${safe('target')}"></label>
+          <label>Prazo em meses<input data-field="deadline" type="number" min="1" max="60" step="1" placeholder="Ex.: 3" value="${safe('deadline')}"></label>
+        </div>
+        <p class="helper">${optionalRecomp ? 'Na recomposição, peso-alvo e prazo são opcionais; se informar um, informe os dois. ' : ''}A V16 transforma os meses em uma data-alvo real do calendário.</p>`}`;
   }
 
   if (step === 3) {
@@ -65,7 +74,7 @@ export function renderAssessment(container, step, profile) {
       </label>
       <div class="field-row">
         <label>Treinos/semana<input data-field="trainingFreq" type="number" min="0" max="7" value="${safe('trainingFreq')}"></label>
-        <label>Minutos/treino<input data-field="trainingMin" type="number" min="0" value="${safe('trainingMin')}"></label>
+        <label>Minutos/treino<input data-field="trainingMin" type="number" min="0" max="600" value="${safe('trainingMin')}"></label>
       </div>
       <label>Tipo de treino
         <select data-field="trainingType">
@@ -83,16 +92,18 @@ export function renderAssessment(container, step, profile) {
           <option value="evening"${selected(profile,'trainingTime','evening')}>Noite</option>
         </select>
       </label>
-      <label>Passos/dia<input data-field="steps" type="number" min="0" value="${safe('steps')}"></label>`;
+      <p class="helper">O horário é usado apenas para organizar referências de pré/pós-treino no cardápio estrutural; não muda calorias automaticamente.</p>`;
   }
 
   if (step === 4) {
+    const removedProfile = profile.preferences === 'ayurveda';
     html = `<h2>Como você se alimenta?</h2>
       <label>Refeições por dia
         <select data-field="meals">
           ${[3,4,5,6].map(n => `<option value="${n}"${selected(profile,'meals',n)}>${n}</option>`).join('')}
         </select>
       </label>
+      ${removedProfile ? '<div class="alert warning"><strong>Preferência removida</strong><br>A opção ayurvédica não faz mais parte do NutriTouch V16. Selecione um perfil alimentar abaixo.</div>' : ''}
       <p class="field-title">Preferências</p>
       <div class="option-grid">
         ${optionCard(profile,'preferences','brasileira','🍚 Brasileira e caseira','Arroz, feijão, frutas, verduras e preparações do dia a dia.')}
@@ -101,17 +112,9 @@ export function renderAssessment(container, step, profile) {
         ${optionCard(profile,'preferences','vegana','🌱 Vegana','Sem ingredientes de origem animal.')}
         ${optionCard(profile,'preferences','sem-gluten','🌾 Sem glúten','Prioriza alimentos naturalmente sem glúten.')}
         ${optionCard(profile,'preferences','fitness','🏋️ Fitness e performance','Foco em treino, desempenho e recuperação.')}
-        ${optionCard(profile,'preferences','ayurveda','🌿 Inspiração ayurvédica','Inspiração culinária, sem diagnóstico.')}
       </div>
       <label>Alimentos que deseja evitar<input data-field="avoid" value="${safe('avoid')}" placeholder="Separe por vírgulas"></label>
-      <label>Alergias alimentares<input data-field="allergies" value="${safe('allergies')}" placeholder="Separe por vírgulas"></label>
-      <label>Tempo para cozinhar
-        <select data-field="cook">
-          <option value="quick"${selected(profile,'cook','quick')}>Pouco</option>
-          <option value="moderate"${selected(profile,'cook','moderate')}>Moderado</option>
-          <option value="high"${selected(profile,'cook','high')}>Tenho tempo</option>
-        </select>
-      </label>`;
+      <label>Alergias alimentares<input data-field="allergies" value="${safe('allergies')}" placeholder="Separe por vírgulas"></label>`;
   }
 
   if (step === 5) {
@@ -164,5 +167,61 @@ export function validateAssessmentStep(step, profile) {
       return 'Revise peso e altura informados.';
     }
   }
+
+  if (step === 2) {
+    if (!GOALS.has(profile.goal)) return 'Selecione um objetivo válido.';
+    const weight = Number(profile.weight);
+    const target = Number(profile.target);
+    const deadline = Number(profile.deadline);
+
+    if (profile.goal === 'maintenance') return null;
+
+    if (profile.goal === 'loss' || profile.goal === 'gain') {
+      if (!Number.isFinite(target) || target < 20 || target > 350 || !Number.isInteger(deadline) || deadline < 1 || deadline > 60) {
+        return 'Informe um peso-alvo válido e um prazo inteiro entre 1 e 60 meses.';
+      }
+      if (profile.goal === 'loss' && target >= weight) {
+        return 'Para emagrecimento, o peso-alvo precisa ser menor que o peso atual.';
+      }
+      if (profile.goal === 'gain' && target <= weight) {
+        return 'Para ganho de massa, o peso-alvo precisa ser maior que o peso atual.';
+      }
+    }
+
+    if (profile.goal === 'recomp') {
+      const hasTarget = profile.target !== '' && profile.target != null;
+      const hasDeadline = profile.deadline !== '' && profile.deadline != null;
+      if (hasTarget !== hasDeadline) return 'Na recomposição, informe peso-alvo e prazo juntos ou deixe ambos em branco.';
+      if (hasTarget && (!Number.isFinite(target) || target < 20 || target > 350 || !Number.isInteger(deadline) || deadline < 1 || deadline > 60)) {
+        return 'Revise o peso-alvo e o prazo da recomposição.';
+      }
+    }
+  }
+
+  if (step === 3) {
+    const freq = Number(profile.trainingFreq || 0);
+    const minutes = Number(profile.trainingMin || 0);
+    if (!Number.isFinite(freq) || freq < 0 || freq > 7 || !Number.isFinite(minutes) || minutes < 0 || minutes > 600) {
+      return 'Revise frequência e duração dos treinos.';
+    }
+    if (profile.trainingType !== 'none' && (freq < 1 || minutes < 1)) {
+      return 'Se você treina, informe pelo menos 1 treino por semana e a duração média.';
+    }
+    if (profile.trainingType === 'none' && freq > 0) {
+      return 'Se selecionou “Nenhum” como tipo de treino, use 0 em treinos por semana.';
+    }
+  }
+
+  if (step === 4) {
+    const meals = Number(profile.meals);
+    if (!Number.isInteger(meals) || meals < 3 || meals > 6) return 'Selecione entre 3 e 6 refeições por dia.';
+    if (!PREFERENCES.has(profile.preferences)) return 'Selecione um perfil alimentar disponível na V16.';
+  }
+
+  if (step === 5) {
+    if (!INTOLERANCES.has(profile.intolerance)) return 'Selecione uma opção válida de intolerância ou sensibilidade.';
+    if (!CONDITIONS.has(profile.condition)) return 'Selecione uma opção válida de condição de saúde.';
+  }
+
   return null;
 }
