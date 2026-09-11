@@ -40,7 +40,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill $SERVER_PID || true' EXIT
           sleep 1
-          node tests/v16-ui-audit.mjs
+          node tests/v16-ui-audit-run.mjs
 
   deploy:
     if: github.event_name != 'pull_request'
