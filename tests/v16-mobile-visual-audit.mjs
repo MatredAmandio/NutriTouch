@@ -57,9 +57,15 @@ async function wait(expr, timeout=5000){
   return false;
 }
 async function navigate(path=''){
-  await send('Page.navigate',{url:new URL(path,BASE).href});
-  if(!await wait(`document.readyState==='complete'`,6000)) throw new Error('Page load timeout');
-  await sleep(180);
+  const target = new URL(path, BASE).href;
+  await send('Page.navigate',{url:target});
+  const expected = JSON.stringify(target);
+  if(!await wait(`location.href===${expected} && document.readyState==='complete'`,8000)) {
+    const actual = await js('location.href');
+    throw new Error(`Page load timeout: expected ${target}, got ${actual}`);
+  }
+  await wait(`!!document.body`,2000);
+  await sleep(220);
 }
 async function click(sel){
   const ok=await js(`(()=>{const e=document.querySelector(${JSON.stringify(sel)});if(!e)return false;e.click();return true})()`);
@@ -88,7 +94,7 @@ async function geometryChecks(screen, viewportName){
   const g=await js(`(()=>{
     const active=document.querySelector('.screen.is-active');
     const nav=document.querySelector('.bottom-nav');
-    const visible=e=>{const s=getComputedStyle(e);const r=e.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&!e.hidden&&r.width>0&&r.height>0};
+    const visible=e=>{if(!e)return false;const s=getComputedStyle(e);const r=e.getBoundingClientRect();return s.display!=='none'&&s.visibility!=='hidden'&&!e.hidden&&r.width>0&&r.height>0};
     const tappables=[...document.querySelectorAll('button,input,select,textarea')].filter(visible).map(e=>({tag:e.tagName,cls:e.className,w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height,text:(e.textContent||e.getAttribute('placeholder')||'').trim().slice(0,40)}));
     const controls=tappables.filter(x=>['INPUT','SELECT','TEXTAREA'].includes(x.tag));
     const buttons=tappables.filter(x=>x.tag==='BUTTON');
@@ -127,7 +133,7 @@ try{
   await js('localStorage.clear()');
   await navigate();
   check('Boas-vindas','360×800','abre para perfil novo',await wait(`!!document.querySelector('#welcome.is-active')`));
-  check('Boas-vindas','360×800','barra inferior fica oculta',await js(`document.querySelector('.bottom-nav').hidden===true`));
+  check('Boas-vindas','360×800','barra inferior fica oculta',await js(`document.querySelector('.bottom-nav')?.hidden===true`));
   await geometryChecks('Boas-vindas','360×800');
   await screenshot('01-welcome-360x800');
 
@@ -147,7 +153,7 @@ try{
   await screenshot('04-assessment-step4-360x800');
   await click('#assessmentNext'); await wait(`document.querySelector('#stepLabel')?.textContent.includes('5 DE 5')`); await click('#assessmentNext');
   check('Resultado','360×800','abre após cinco etapas',await wait(`!!document.querySelector('#result.is-active')`));
-  check('Resultado','360×800','barra inferior visível após conclusão',await js(`document.querySelector('.bottom-nav').hidden===false`));
+  check('Resultado','360×800','barra inferior visível após conclusão',await js(`document.querySelector('.bottom-nav')?.hidden===false`));
   await geometryChecks('Resultado','360×800');
   await screenshot('05-result-360x800');
 
