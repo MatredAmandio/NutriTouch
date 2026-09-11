@@ -22,13 +22,13 @@ p{line-height:1.5;color:var(--muted)}
 }
 .primary-button{border:0;background:linear-gradient(135deg,var(--green-2),var(--green));color:#fff;box-shadow:0 8px 18px rgba(33,140,90,.18)}
 .secondary-button{background:#fff;color:var(--green-dark);border:1px solid #BFD5C5}
-.text-button{border:0;background:transparent;color:var(--green-dark);font-weight:750;padding:8px 0;cursor:pointer}
+.text-button{min-height:44px;border:0;background:transparent;color:var(--green-dark);font-weight:750;padding:10px 0;cursor:pointer;display:inline-flex;align-items:center}
 .danger-text{color:var(--danger)}
 .button-row{display:flex;gap:10px}
 .button-row>*{flex:1}
 label,.field-title{display:block;color:var(--green-dark);font-size:13px;font-weight:760;margin:12px 0 6px}
 input,select,textarea{
-  display:block;width:100%;margin-top:6px;padding:13px 14px;border:1px solid #C7D8CD;border-radius:15px;background:#fff;color:var(--text)
+  display:block;width:100%;min-height:44px;margin-top:6px;padding:13px 14px;border:1px solid #C7D8CD;border-radius:15px;background:#fff;color:var(--text)
 }
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(42,157,143,.12)}
 .field-row{display:flex;gap:10px}
@@ -60,8 +60,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);b
 .hero-summary{padding:20px;border-radius:22px;background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;box-shadow:var(--shadow);margin:14px 0}
 .hero-summary span,.hero-summary small{display:block;opacity:.85}
 .hero-summary strong{display:block;font-size:28px;margin:5px 0}
-.day-tabs{display:flex;gap:8px;overflow:auto;padding:4px 2px 10px;margin:10px 0 14px}
-.day-tab{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--green-dark);padding:10px 13px;border-radius:14px;font-weight:800}
+.day-tabs{display:flex;gap:8px;overflow:auto;padding:4px 2px 10px;margin:10px 0 14px;scrollbar-width:none;-ms-overflow-style:none}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tab{flex:0 0 auto;min-height:44px;border:1px solid var(--line);background:#fff;color:var(--green-dark);padding:10px 13px;border-radius:14px;font-weight:800}
 .day-tab.is-active{background:var(--green);color:#fff;border-color:var(--green)}
 .menu-status{background:#F4FAF5}
 .meal-card{padding:16px;margin:11px 0}
@@ -93,5 +94,5 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);b
 .bottom-nav button{border:0;background:transparent;color:var(--muted);font-size:11px;min-width:70px;min-height:48px;border-radius:13px;padding:5px 8px}
 .bottom-nav button span{display:block;font-size:16px;margin-bottom:2px}
 .bottom-nav button.is-active{color:var(--green);font-weight:850;background:#ECF8EF}
-.toast{position:fixed;z-index:100;top:16px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)}
+.toast{position:fixed;z-index:100;left:50%;bottom:calc(78px + var(--safe-bottom));top:auto;transform:translateX(-50%);max-width:calc(100vw - 32px);background:var(--green-dark);color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;box-shadow:var(--shadow)}
 [hidden]{display:none!important}
