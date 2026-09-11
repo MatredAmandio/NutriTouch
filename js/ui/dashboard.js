@@ -23,6 +23,7 @@ export function renderResult(container, result) {
   const plan = goal.plan;
 
   container.innerHTML = `
+    <div class="motivation-card">Seu plano começa com informação clara — e continua com escolhas possíveis.</div>
     <div class="metric-grid">
       <article class="metric"><span>IMC</span><strong>${formatNumber(anthropometry.bmi, 1)}</strong><small>${anthropometry.bmiClass}</small></article>
       <article class="metric"><span>TMB</span><strong>${metabolism.bmrKcal == null ? '—' : formatNumber(metabolism.bmrKcal)}</strong><small>${metabolism.bmrKcal == null ? 'não exibida para menores' : 'kcal/dia'}</small></article>
@@ -64,18 +65,24 @@ export function renderResult(container, result) {
 
 export function renderDashboard(container, profile, result) {
   if (!result?.ok) {
-    container.innerHTML = `<div class="card"><h3>Vamos começar?</h3><p>Complete as cinco etapas da avaliação para gerar suas estimativas.</p></div>`;
+    container.innerHTML = `<div class="card card-soft"><h3>Vamos começar?</h3><p>Complete as cinco etapas da avaliação para gerar suas estimativas.</p></div>`;
     return;
   }
 
   container.innerHTML = `
+    <div class="motivation-card">“Disciplina hoje, mais liberdade amanhã.”</div>
     <div class="hero-summary">
       <span>Meta energética estimada</span>
       <strong>${formatNumber(result.target.kcal)} kcal/dia</strong>
       <small>Segurança: ${result.safety.level}</small>
     </div>
+    <div class="quick-grid" aria-label="Resumo do plano">
+      <div class="quick-card"><b>🌿</b>${GOAL_LABELS[profile.goal] || 'Seu objetivo'}</div>
+      <div class="quick-card"><b>🍽</b>${profile.meals} refeições</div>
+      <div class="quick-card"><b>♡</b>No seu ritmo</div>
+    </div>
     <div class="card">
-      <h3>Seu perfil está pronto</h3>
+      <h3>Seu plano de hoje</h3>
       <p>Use o cardápio como estrutura de refeições e acompanhe sua evolução ao longo do tempo.</p>
       <div class="data-row"><b>Objetivo</b><span>${GOAL_LABELS[profile.goal] || 'Objetivo personalizado'}</span></div>
       <div class="data-row"><b>Refeições/dia</b><span>${profile.meals}</span></div>
