@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-3';
+const CACHE = 'nutritouch-v16-4';
 const CORE = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const CORE = [
   './css/tokens.css',
   './css/components.css',
   './css/photos.css',
+  './css/food-engine.css',
   './css/mobile.css',
   './js/app.js',
   './js/storage.js',
@@ -19,6 +20,9 @@ const CORE = [
   './js/meals/templates.js',
   './js/meals/substitutions.js',
   './js/meals/generator.js',
+  './js/meals/nutrition.js',
+  './js/meals/quantified-recipes.js',
+  './js/meals/quantified-generator.js',
   './js/data/foods.js',
   './js/ui/dom.js',
   './js/ui/assessment.js',
