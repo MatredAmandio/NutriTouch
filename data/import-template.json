@@ -1,0 +1,29 @@
+{
+  "id": "NT-COUNTRY-000000",
+  "name": "Nome do alimento",
+  "group": "group",
+  "food_state": "raw_or_cooked",
+  "processing_level": "minimally_processed",
+  "nutrition": {
+    "basis_g": 100,
+    "energy_kcal": null,
+    "protein_g": null,
+    "carbohydrate_g": null,
+    "fiber_g": null,
+    "fat_g": null,
+    "sodium_mg": null
+  },
+  "sources": [
+    {
+      "source_id": "USDA_FDC",
+      "record_id": "REPLACE_WITH_RECORD_ID",
+      "status": "pending_import",
+      "accessed_at": "YYYY-MM-DD"
+    }
+  ],
+  "diet_compatibility": {},
+  "restrictions": [],
+  "allergens": [],
+  "household_measures": [],
+  "tags": []
+}
