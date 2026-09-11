@@ -1,1 +1,109 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"NutriTouch Nutrients","type":"object","properties":{"basis_g":{"type":"number","const":100},"energy_kcal":{"type":["number","null"]},"protein_g":{"type":["number","null"]},"carbohydrate_g":{"type":["number","null"]},"fiber_g":{"type":["number","null"]},"fat_g":{"type":["number","null"]},"sodium_mg":{"type":["number","null"]}},"required":["basis_g"]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NutriTouch Nutrients V2",
+  "type": "object",
+  "required": [
+    "basis_g",
+    "energy_kcal",
+    "protein_g",
+    "carbohydrate_g",
+    "fat_g",
+    "fiber_g",
+    "sodium_mg"
+  ],
+  "properties": {
+    "basis_g": {
+      "const": 100
+    },
+    "energy_kcal": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "protein_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "carbohydrate_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "fiber_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "fat_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "saturated_fat_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "sugars_g": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "sodium_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "potassium_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "calcium_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "iron_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "magnesium_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "zinc_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "vitamin_c_mg": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "vitamin_b12_ug": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}
