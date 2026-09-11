@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "groups": {
+    "protein_animal": [
+      "chicken_breast",
+      "fish",
+      "lean_beef",
+      "egg"
+    ],
+    "plant_protein": [
+      "tofu",
+      "tempeh",
+      "lentils",
+      "beans",
+      "chickpeas"
+    ],
+    "starch": [
+      "rice_cooked",
+      "potato",
+      "sweet_potato",
+      "cassava",
+      "oats"
+    ],
+    "fruit": [
+      "banana",
+      "papaya",
+      "apple",
+      "orange"
+    ],
+    "vegetables": [
+      "broccoli",
+      "carrot",
+      "zucchini",
+      "leafy_greens"
+    ]
+  },
+  "safety": "Substitution must be revalidated against nutrient targets, allergies, restrictions and preparation method."
+}
