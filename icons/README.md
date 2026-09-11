@@ -1,9 +1,8 @@
 # Ícones PWA
 
-A V16 usa o SVG vetorial como favicon e mantém variantes PNG para instalação em plataformas que exigem tamanhos rasterizados.
+A V16 usa ícones vetoriais no manifesto:
 
-- `icon-192.png`: ícone 192×192
-- `icon-512.png`: ícone 512×512
-- `icon-maskable-512.png`: variante maskable com área segura ampliada
+- `icon.svg`: ícone principal e favicon;
+- `icon-maskable.svg`: variante com fundo integral e área segura para instalação maskable.
 
-O manifesto referencia as variantes PNG e mantém `icon.svg` como recurso vetorial do projeto.
+A estrutura evita recortes indesejados em launchers compatíveis com ícones maskable. Variantes rasterizadas podem ser adicionadas futuramente se algum destino de empacotamento exigir PNG específico.
