@@ -14,6 +14,16 @@ const PHOTO_LIBRARY = Object.freeze({
   vegetables: 'https://unsplash.com/photos/lGeAZjIhQyo/download?force=true&w=1200'
 });
 
+const DAILY_PHOTOS = Object.freeze([
+  PHOTO_LIBRARY.breakfast,
+  PHOTO_LIBRARY.yogurt,
+  PHOTO_LIBRARY.eggs,
+  PHOTO_LIBRARY.omelet,
+  PHOTO_LIBRARY.chicken,
+  PHOTO_LIBRARY.fish,
+  PHOTO_LIBRARY.vegan
+]);
+
 function photoForMeal(title = '', components = []) {
   const text = `${title} ${components.join(' ')}`.toLowerCase();
   if (/frango|carne/.test(text)) return PHOTO_LIBRARY.chicken;
@@ -28,15 +38,14 @@ function photoForMeal(title = '', components = []) {
   return PHOTO_LIBRARY.vegetables;
 }
 
-function mealPhoto(entry, index) {
+function mealPhoto(entry, index, selectedDay, featuredIndex) {
   const blocked = (entry.meal.flags || []).includes('blocked');
-  if (blocked) return '';
-  const src = photoForMeal(entry.meal.title, entry.meal.components || []);
+  if (blocked || index !== featuredIndex) return '';
+  const src = DAILY_PHOTOS[selectedDay] || photoForMeal(entry.meal.title, entry.meal.components || []);
   const alt = `Foto ilustrativa de ${entry.meal.title}`;
-  const badge = index === 0 ? '<span class="meal-photo-badge">Foto do prato</span>' : '';
   return `<figure class="meal-photo-wrap">
     <img class="meal-photo" src="${src}" alt="${escapeHTML(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').hidden=true">
-    ${badge}
+    <span class="meal-photo-badge">Foto do prato</span>
   </figure>`;
 }
 
@@ -64,6 +73,13 @@ export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetK
   const day = plan[selectedDay] || plan[0];
   const quantified = day.nutrientStatus === 'validated-food-calculation';
   const daily = day.nutrients;
+  const eligiblePhotoIndexes = day.meals
+    .map((entry, index) => ((entry.meal.flags || []).includes('blocked') ? -1 : index))
+    .filter(index => index >= 0);
+  const featuredPhotoIndex = eligiblePhotoIndexes.length
+    ? eligiblePhotoIndexes[selectedDay % eligiblePhotoIndexes.length]
+    : -1;
+
   container.innerHTML = `
     <div class="card menu-status">
       <strong>${escapeHTML(day.day)}</strong>
@@ -77,7 +93,7 @@ export function renderMealPlan({ tabs, container, plan, selectedDay = 0, targetK
     ${day.meals.map((entry, index) => {
       const blocked = (entry.meal.flags || []).includes('blocked');
       return `<article class="meal-card${blocked ? ' blocked-meal' : ''}">
-        ${mealPhoto(entry, index)}
+        ${mealPhoto(entry, index, selectedDay, featuredPhotoIndex)}
         <div class="meal-body">
           <div class="meal-header">
             <span>${escapeHTML(entry.label)}${entry.role ? ` <b class="meal-role">${escapeHTML(entry.role)}</b>` : ''}</span>
