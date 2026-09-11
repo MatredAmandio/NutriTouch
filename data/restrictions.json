@@ -1,1 +1,54 @@
-{"version":"1.0","restrictions":[{"id":"lactose","type":"intolerance","label":"Intolerância à lactose"},{"id":"gluten_intolerance","type":"intolerance","label":"Intolerância ao glúten"},{"id":"fructose","type":"intolerance","label":"Intolerância à frutose"},{"id":"ncgs","type":"sensitivity","label":"Sensibilidade ao glúten não celíaca"},{"id":"celiac","type":"clinical","label":"Doença celíaca","automatic_safety":"strict"},{"id":"food_allergy","type":"allergy","label":"Alergia alimentar","automatic_safety":"strict"}]}
+{
+  "version": "2.0.0",
+  "restrictions": [
+    {
+      "id": "lactose",
+      "type": "intolerance",
+      "label": "Intolerância à lactose",
+      "requires_product_level_check": true
+    },
+    {
+      "id": "gluten_intolerance",
+      "type": "reported_intolerance",
+      "label": "Intolerância ao glúten",
+      "requires_product_level_check": true
+    },
+    {
+      "id": "fructose",
+      "type": "intolerance_or_malabsorption",
+      "label": "Intolerância à frutose",
+      "requires_individualization": true
+    },
+    {
+      "id": "ncgs",
+      "type": "sensitivity",
+      "label": "Sensibilidade ao glúten não celíaca",
+      "requires_medical_exclusion_of_celiac": true
+    },
+    {
+      "id": "celiac",
+      "type": "clinical",
+      "label": "Doença celíaca",
+      "automatic_safety": "strict",
+      "cross_contamination": "strict"
+    },
+    {
+      "id": "food_allergy",
+      "type": "allergy",
+      "label": "Alergia alimentar",
+      "automatic_safety": "strict"
+    },
+    {
+      "id": "milk_protein",
+      "type": "allergy",
+      "label": "Alergia à proteína do leite",
+      "automatic_safety": "strict"
+    },
+    {
+      "id": "egg",
+      "type": "allergy",
+      "label": "Alergia ao ovo",
+      "automatic_safety": "strict"
+    }
+  ]
+}
