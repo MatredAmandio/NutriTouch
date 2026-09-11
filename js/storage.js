@@ -71,7 +71,13 @@ export function writeJSON(key, value) {
 
 export function getProfile() {
   const stored = readJSON(STORAGE_KEYS.profile, null);
-  return stored ? { ...DEFAULT_PROFILE, ...stored } : { ...DEFAULT_PROFILE };
+  const profile = stored ? { ...DEFAULT_PROFILE, ...stored } : { ...DEFAULT_PROFILE };
+  if (profile.preferences === 'ayurveda') {
+    profile.preferences = '';
+    profile._assessmentCompleted = false;
+    profile._assessmentCompletedSignature = '';
+  }
+  return profile;
 }
 
 export function saveProfile(profile) {
