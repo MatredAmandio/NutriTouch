@@ -200,6 +200,7 @@ function calc(){
     if(d.goal==='recomp'){kcal=eer*.97;goalAdjusted=true}
   }
   const protein=proteinTarget(a,d.sex,w);
+  const macros=macroTargets(a,w,kcal,protein);
   const fiber=fiberTarget(a,d.sex,kcal);
   const sodium=sodiumTarget(a,kcal);
   return{age:a,imc,bmr,eer,kcal,protein,carbs:macros.carbs,fat:macros.fat,fiber,sodium,band,goalAdjusted,review,reason,pediatric:a<19,bmiClass:a<19?'Use IMC-por-idade/sexo (OMS) para classificação':adultBMIClass(imc)};
@@ -230,76 +231,240 @@ function renderResult(){
     '</div>'+
     '<div class="card small"><h3>Como o cálculo foi tratado</h3><p>Faixa etária suportada: 10–80 anos. Menores de 19 anos usam equações de energia com custo de crescimento. Adultos usam equações específicas por sexo e nível de atividade. A TMB é informativa e não é multiplicada novamente para criar o gasto total.</p></div>';
 }
-function adapt(a){
-  if(d.preferences==='vegetariana')a=a.map((x,i)=>i===1?'Lentilha, arroz integral, feijão e vegetais|150g lentilha • 100g arroz integral • 100g feijão • 200g vegetais|540':x);
-  if(d.preferences==='vegana')a=a.map((x,i)=>i===0?'Aveia, fruta e castanhas|45g aveia • 130g fruta • 20g castanhas|360':i===1?'Grão-de-bico, arroz integral e vegetais|160g grão-de-bico • 120g arroz integral • 250g vegetais|540':x);
-  if(d.preferences==='fitness'){
-    const breakfast='Aveia, banana, iogurte e ovos|45g aveia • 90g banana • 170g iogurte • 100g ovos|460';
-    const lunch='Proteína magra, arroz, feijão e vegetais|150g frango/peixe • 140g arroz • 100g feijão • 220g vegetais|620';
-    const snack='Iogurte, fruta e aveia|170g iogurte • 100g fruta • 25g aveia|260';
-    const dinner='Proteína, carboidrato e vegetais|140g proteína • 180g batata/arroz • 220g vegetais|520';
-    a=[breakfast,lunch,snack,dinner];
+
+// Weekly Variety Engine V1
+// Creativity is constrained by curated meal pools and anti-repetition rules.
+// It does not invent nutrient values or override restrictions.
+const VARIETY_POOLS={
+  brasileira:{
+    breakfast:[
+      'Cuscuz com ovos, tomate e fruta|100g cuscuz • 100g ovos • 80g tomate • 120g fruta|420',
+      'Pão integral, ovos e mamão|60g pão integral • 100g ovos • 150g mamão|410',
+      'Aveia com banana, iogurte e castanhas|45g aveia • 90g banana • 170g iogurte • 15g castanhas|390',
+      'Tapioca com queijo e fruta|70g tapioca • 35g queijo • 130g fruta|400',
+      'Iogurte com aveia, fruta e sementes|170g iogurte • 40g aveia • 130g fruta • 10g sementes|390',
+      'Pão francês com ovos e fruta|50g pão • 100g ovos • 120g fruta|420',
+      'Mingau de aveia com banana e canela|50g aveia • 120g banana • 200ml leite|400'
+    ],
+    lunch:[
+      'Frango grelhado, arroz, feijão e salada colorida|140g frango • 120g arroz • 100g feijão • 220g vegetais|590',
+      'Peixe assado, batata-doce e legumes|150g peixe • 180g batata-doce • 220g vegetais|560',
+      'Carne magra, arroz integral, feijão e couve|140g carne magra • 110g arroz integral • 90g feijão • 200g couve e vegetais|610',
+      'Omelete com legumes, arroz e feijão|120g ovos • 110g arroz • 100g feijão • 200g vegetais|550',
+      'Frango assado, mandioca e salada|140g frango • 160g mandioca • 220g salada|570',
+      'Sardinha, arroz integral, feijão e vegetais|140g sardinha • 110g arroz integral • 90g feijão • 220g vegetais|600',
+      'Carne magra, purê de batata e legumes|140g carne magra • 180g batata • 220g vegetais|590'
+    ],
+    snack:[
+      'Fruta da estação e castanhas|150g fruta • 20g castanhas|190',
+      'Iogurte natural com aveia e canela|170g iogurte • 30g aveia|230',
+      'Banana com pasta de amendoim|100g banana • 15g pasta de amendoim|190',
+      'Pão integral com queijo branco e tomate|50g pão • 35g queijo branco • 60g tomate|250',
+      'Mamão com sementes e iogurte|150g mamão • 10g sementes • 120g iogurte|220',
+      'Maçã com castanhas|130g maçã • 20g castanhas|180',
+      'Tapioca pequena com ovo|50g tapioca • 50g ovo|240'
+    ],
+    dinner:[
+      'Omelete com legumes e batata assada|120g ovos • 180g batata • 220g vegetais|470',
+      'Frango desfiado, arroz e vegetais|130g frango • 110g arroz • 220g vegetais|520',
+      'Peixe grelhado, mandioca e salada|140g peixe • 140g mandioca • 220g salada|500',
+      'Lentilha, arroz integral e legumes|160g lentilha • 100g arroz integral • 220g vegetais|490',
+      'Carne magra com abóbora e legumes|130g carne magra • 200g abóbora • 220g vegetais|480',
+      'Frango com quinoa e legumes|130g frango • 120g quinoa • 220g vegetais|530',
+      'Sopa caseira de legumes com ovos|350g sopa de legumes • 100g ovos • 40g pão integral|460'
+    ]
+  },
+  mediterranea:{
+    breakfast:[
+      'Iogurte natural, aveia, frutas e nozes|170g iogurte • 40g aveia • 130g fruta • 15g nozes|410',
+      'Pão integral com ovos, tomate e azeite|60g pão • 100g ovos • 100g tomate • 5g azeite|420',
+      'Aveia com frutas, iogurte e sementes|45g aveia • 150g fruta • 150g iogurte • 10g sementes|400',
+      'Pão com queijo, tomate e fruta|60g pão • 40g queijo • 80g tomate • 120g fruta|410'
+    ],
+    lunch:[
+      'Peixe assado, quinoa, grão-de-bico e salada|150g peixe • 100g quinoa • 80g grão-de-bico • 220g salada|590',
+      'Frango com azeite, arroz integral e vegetais|140g frango • 110g arroz integral • 220g vegetais • 5g azeite|580',
+      'Lentilha, vegetais assados e arroz integral|160g lentilha • 110g arroz integral • 250g vegetais|560',
+      'Peixe, batata e salada com azeite|150g peixe • 180g batata • 220g salada • 5g azeite|570'
+    ],
+    snack:[
+      'Fruta e nozes|150g fruta • 20g nozes|200',
+      'Iogurte com fruta|170g iogurte • 120g fruta|190',
+      'Hommus com vegetais e pão integral|50g hommus • 100g vegetais • 40g pão|240',
+      'Queijo branco, fruta e sementes|40g queijo • 120g fruta • 10g sementes|220'
+    ],
+    dinner:[
+      'Omelete com vegetais e batata|120g ovos • 220g vegetais • 160g batata|490',
+      'Frango assado, quinoa e legumes|130g frango • 110g quinoa • 220g vegetais|520',
+      'Peixe com legumes e arroz integral|140g peixe • 220g legumes • 100g arroz integral|510',
+      'Grão-de-bico, vegetais e pão integral|160g grão-de-bico • 250g vegetais • 50g pão integral|500'
+    ]
+  },
+  vegetariana:{
+    breakfast:[
+      'Pão integral, ovos, tomate e fruta|60g pão • 100g ovos • 80g tomate • 120g fruta|410',
+      'Aveia, iogurte, banana e castanhas|45g aveia • 170g iogurte • 90g banana • 15g castanhas|400',
+      'Tapioca com queijo e fruta|70g tapioca • 40g queijo • 120g fruta|410',
+      'Omelete com vegetais e pão integral|100g ovos • 100g vegetais • 50g pão integral|400'
+    ],
+    lunch:[
+      'Lentilha, arroz integral e vegetais|170g lentilha • 110g arroz integral • 250g vegetais|560',
+      'Grão-de-bico, quinoa e salada|160g grão-de-bico • 120g quinoa • 250g salada|570',
+      'Omelete, feijão, arroz e legumes|130g ovos • 90g feijão • 110g arroz • 220g legumes|560',
+      'Tofu grelhado, batata-doce e vegetais|180g tofu • 180g batata-doce • 220g vegetais|540'
+    ],
+    snack:[
+      'Iogurte com fruta e aveia|170g iogurte • 120g fruta • 25g aveia|230',
+      'Fruta e castanhas|150g fruta • 20g castanhas|190',
+      'Pão integral com queijo branco|50g pão • 40g queijo branco|250',
+      'Banana com pasta de amendoim|100g banana • 15g pasta de amendoim|190'
+    ],
+    dinner:[
+      'Tofu com arroz integral e legumes|180g tofu • 100g arroz integral • 250g legumes|500',
+      'Omelete com batata e salada|130g ovos • 160g batata • 220g salada|490',
+      'Sopa de lentilha com pão integral|350g sopa • 50g pão integral|480',
+      'Grão-de-bico com vegetais e quinoa|150g grão-de-bico • 220g vegetais • 100g quinoa|510'
+    ]
+  },
+  vegana:{
+    breakfast:[
+      'Aveia com banana, bebida vegetal e castanhas|50g aveia • 100g banana • 200ml bebida vegetal • 15g castanhas|400',
+      'Pão integral com hommus, tomate e fruta|60g pão • 50g hommus • 80g tomate • 120g fruta|410',
+      'Tapioca com pasta de amendoim e fruta|70g tapioca • 15g pasta de amendoim • 120g fruta|390',
+      'Iogurte vegetal com aveia e frutas|170g iogurte vegetal • 40g aveia • 150g fruta|390'
+    ],
+    lunch:[
+      'Grão-de-bico, arroz integral e vegetais|170g grão-de-bico • 110g arroz integral • 250g vegetais|570',
+      'Tofu, batata-doce e legumes|200g tofu • 180g batata-doce • 220g legumes|550',
+      'Lentilha, quinoa e salada|170g lentilha • 110g quinoa • 250g salada|560',
+      'Feijão, arroz integral, abóbora e couve|120g feijão • 110g arroz integral • 180g abóbora • 150g couve|570'
+    ],
+    snack:[
+      'Fruta com castanhas|150g fruta • 20g castanhas|190',
+      'Banana com pasta de amendoim|100g banana • 15g pasta de amendoim|190',
+      'Hommus com vegetais|60g hommus • 150g vegetais|210',
+      'Iogurte vegetal com fruta|170g iogurte vegetal • 120g fruta|190'
+    ],
+    dinner:[
+      'Tofu com legumes e arroz integral|180g tofu • 220g legumes • 100g arroz integral|500',
+      'Sopa de lentilha com pão sem ingredientes animais|350g sopa • 50g pão adequado|470',
+      'Grão-de-bico com vegetais e quinoa|160g grão-de-bico • 250g vegetais • 100g quinoa|510',
+      'Feijão, mandioca e salada|130g feijão • 160g mandioca • 220g salada|500'
+    ]
+  },
+  fitness:{
+    breakfast:[
+      'Ovos, aveia, banana e iogurte|100g ovos • 40g aveia • 90g banana • 170g iogurte|480',
+      'Pão integral, ovos, fruta e iogurte|60g pão • 100g ovos • 120g fruta • 120g iogurte|470',
+      'Aveia proteica com banana e sementes|50g aveia • 100g banana • 170g iogurte • 10g sementes|450',
+      'Tapioca com ovos, queijo e fruta|70g tapioca • 100g ovos • 30g queijo • 100g fruta|480',
+      'Iogurte, aveia, fruta e castanhas|200g iogurte • 45g aveia • 130g fruta • 15g castanhas|460'
+    ],
+    lunch:[
+      'Frango, arroz, feijão e vegetais|160g frango • 140g arroz • 100g feijão • 250g vegetais|650',
+      'Peixe, batata-doce e legumes|170g peixe • 220g batata-doce • 250g legumes|620',
+      'Carne magra, arroz integral, feijão e salada|160g carne magra • 130g arroz integral • 90g feijão • 220g salada|670',
+      'Frango, mandioca e vegetais|160g frango • 200g mandioca • 250g vegetais|640',
+      'Sardinha, arroz integral e legumes|160g sardinha • 140g arroz integral • 250g legumes|650'
+    ],
+    snack:[
+      'Iogurte, banana e aveia|170g iogurte • 100g banana • 30g aveia|300',
+      'Pão integral com ovos|60g pão • 100g ovos|330',
+      'Banana com iogurte e sementes|100g banana • 170g iogurte • 10g sementes|290',
+      'Tapioca com queijo e fruta|60g tapioca • 35g queijo • 100g fruta|310',
+      'Fruta, iogurte e castanhas|120g fruta • 170g iogurte • 15g castanhas|310'
+    ],
+    dinner:[
+      'Peixe, batata e vegetais|160g peixe • 200g batata • 250g vegetais|570',
+      'Frango, arroz integral e legumes|150g frango • 120g arroz integral • 250g legumes|590',
+      'Omelete reforçada, batata e salada|150g ovos • 180g batata • 220g salada|560',
+      'Carne magra, abóbora e vegetais|150g carne magra • 220g abóbora • 250g vegetais|550',
+      'Frango com quinoa e legumes|150g frango • 130g quinoa • 250g legumes|600'
+    ]
+  },
+  ayurveda:{
+    breakfast:[
+      'Aveia morna com banana, canela e sementes|50g aveia • 100g banana • 10g sementes|390',
+      'Fruta cozida com aveia e castanhas|150g fruta • 45g aveia • 15g castanhas|380',
+      'Mingau de aveia com especiarias suaves|55g aveia • 200ml leite ou bebida vegetal • canela|400'
+    ],
+    lunch:[
+      'Arroz, lentilha, vegetais cozidos e ervas|110g arroz • 170g lentilha • 250g vegetais|560',
+      'Grão-de-bico, arroz integral e legumes|160g grão-de-bico • 110g arroz integral • 250g legumes|570',
+      'Tofu com vegetais e quinoa|180g tofu • 110g quinoa • 250g vegetais|550'
+    ],
+    snack:[
+      'Fruta e castanhas|150g fruta • 20g castanhas|190',
+      'Fruta com sementes|150g fruta • 15g sementes|180',
+      'Bebida morna com aveia|200ml bebida • 25g aveia|180'
+    ],
+    dinner:[
+      'Sopa de lentilha com vegetais|380g sopa de lentilha e vegetais|470',
+      'Arroz, legumes cozidos e grão-de-bico|100g arroz • 140g grão-de-bico • 250g vegetais|500',
+      'Quinoa com vegetais e tofu|110g quinoa • 180g tofu • 250g vegetais|520'
+    ]
   }
-  return a
+};
+
+function menuProfile(){
+  const p=d.preferences||'brasileira';
+  if(p==='sem-gluten')return 'brasileira';
+  return VARIETY_POOLS[p]?p:'brasileira';
+}
+function hashSeed(s){
+  let h=2166136261;
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
+  return h>>>0;
+}
+function rng(seed){
+  return ()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296};
+}
+function currentWeekKey(){
+  const now=new Date();const onejan=new Date(now.getFullYear(),0,1);const dayOfYear=Math.floor((now-onejan)/86400000);
+  return now.getFullYear()+'-'+Math.floor(dayOfYear/7);
+}
+function parseMeal(item){const p=item.split('|');return {title:p[0],parts:p[1],kcal:p[2],raw:item};}
+function pickRotating(pool,count,seed){
+  const r=rng(seed);const order=pool.map((_,i)=>i).sort(()=>r()-.5);
+  const out=[];for(let i=0;i<count;i++)out.push(pool[order[i%order.length]]);
+  return out;
+}
+function buildWeeklyVariety(){
+  const profile=menuProfile(),p=VARIETY_POOLS[profile],seed=hashSeed((d.preferences||'brasileira')+'|'+currentWeekKey()+'|'+(d.goal||''));
+  const plan=[];
+  const keys=['breakfast','lunch','snack','dinner'];
+  const rotations={};
+  keys.forEach((k,i)=>rotations[k]=pickRotating(p[k],7,seed+(i+1)*9973));
+  for(let i=0;i<7;i++){
+    plan.push({breakfast:rotations.breakfast[i],lunch:rotations.lunch[i],snack:rotations.snack[i],dinner:rotations.dinner[i]});
+  }
+  return plan;
 }
 function extraMealsForDay(i){
-  const extras=[
-    ['Fruta com iogurte natural|130g fruta • 170g iogurte natural|180','Leite ou bebida vegetal com fruta|200ml bebida • 90g banana|170'],
-    ['Fruta e sementes|130g fruta • 10g sementes|160','Iogurte natural com canela|170g iogurte natural|140'],
-    ['Fruta com castanhas|120g fruta • 15g castanhas|170','Leite ou bebida vegetal|200ml bebida|120'],
-    ['Iogurte com fruta|170g iogurte • 100g fruta|180','Fruta pequena com sementes|100g fruta • 10g sementes|150'],
-    ['Fruta com pasta de amendoim|120g fruta • 15g pasta de amendoim|190','Iogurte natural|170g iogurte natural|140'],
-    ['Fruta e castanhas|120g fruta • 15g castanhas|180','Bebida vegetal ou leite|200ml bebida|120'],
-    ['Fruta da estação|150g fruta|120','Iogurte ou alternativa vegetal|170g porção|140']
-  ];
-  return extras[i];
+  const profile=menuProfile(),p=VARIETY_POOLS[profile],seed=hashSeed('extra|'+profile+'|'+currentWeekKey());
+  const a=pickRotating(p.snack,7,seed+91),b=pickRotating(p.snack,7,seed+191);
+  return [a[i],b[(i+3)%7]];
+}
+function applySimpleRestrictions(item){
+  // UI-level safety fallback. Product-level checks remain necessary for allergies/celiac disease.
+  if(d.intolerance==='lactose' && /iogurte|queijo|leite/i.test(item)) return 'Fruta da estação e castanhas|150g fruta • 20g castanhas|190';
+  if((d.intolerance==='gluten_intolerance'||d.intolerance==='ncgs'||d.preferences==='sem-gluten') && /pão/i.test(item)) return 'Tapioca com fruta e ovos|70g tapioca • 120g fruta • 100g ovos|420';
+  return item;
 }
 function menuPlanForDay(i,n){
-  const base=adapt([...W[i]]);
+  const weekly=buildWeeklyVariety()[i];
   const extra=extraMealsForDay(i);
-  if(n<=3)return [
-    ['Café da manhã',base[0]],
-    ['Almoço',base[1]],
-    ['Jantar',base[3]]
-  ];
-  if(n===4)return [
-    ['Café da manhã',base[0]],
-    ['Almoço',base[1]],
-    ['Lanche da tarde',base[2]],
-    ['Jantar',base[3]]
-  ];
-  if(n===5)return [
-    ['Café da manhã',base[0]],
-    ['Almoço',base[1]],
-    ['Lanche da tarde',base[2]],
-    ['Jantar',base[3]],
-    ['Ceia',extra[1]]
-  ];
-  return [
-    ['Café da manhã',base[0]],
-    ['Lanche da manhã',extra[0]],
-    ['Almoço',base[1]],
-    ['Lanche da tarde',base[2]],
-    ['Jantar',base[3]],
-    ['Ceia',extra[1]]
-  ];
-}
-function renderMenu(){
-  const requested=Number(d.meals)||4;
-  const n=Math.max(3,Math.min(requested,6));
-  const plan=menuPlanForDay(day,n);
-  $('menuIntro').innerHTML='<strong>7 dias • '+n+' refeições por dia</strong><br>'+ (d.preferences==='fitness'?'Perfil Fitness: foco em treino, recuperação e distribuição de energia e proteína ao longo do dia. ':'') +'O número de refeições acompanha a escolha feita na avaliação, com variedade de preparações, porções aproximadas e foco em alimentos in natura ou minimamente processados.';
-  $('dayTabs').innerHTML=DAYS.map((x,i)=>'<button type="button" class="tab '+(i===day?'active':'')+'" data-day="'+i+'">'+x.slice(0,3)+'</button>').join('');
-  $('dayTabs').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click',()=>{day=+b.dataset.day;renderMenu();scrollTo(0,0)}));
-  let html='<div class="weekly-hero"><img src="https://images.unsplash.com/photo-'+IMG[day]+'?auto=format&fit=crop&w=1200&q=80" alt="Prato saudável representando o cardápio do dia"><div class="shade"></div><div class="copy"><b>'+DAYS[day]+'</b><span>'+n+' refeições</span></div></div><div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato integral/leguminosa</span><small>Referência visual; porções são aproximadas e precisam de individualização quando necessário.</small></div>';
-  const roles=trainingMealRoles(n);
-  plan.forEach(([mealName,x],idx)=>{
-    const p=x.split('|'),role=roles[idx]||'';
-    const roleHtml=role?'<div class="fit-role">🏋️ '+role+'</div>':'';
-    html+='<article class="weekly-meal"><div class="mealhead"><div><div class="mealname">'+mealName+'</div>'+roleHtml+'<div class="desc">'+p[0]+'</div></div><span class="badge">≈ '+p[2]+' kcal</span></div><div class="weekly-foods">'+p[1].split(' • ').map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="portion"><b>Porções aproximadas:</b> quantidades indicadas em gramas; use utensílios caseiros equivalentes conforme necessidade.</div></article>';
-  });
-  if(d.preferences==='fitness'&&Object.keys(roles).length)html+='<div class="card small"><b>Rotina de treino:</b> estas marcações organizam refeições próximas ao horário habitual informado. Ajuste o horário conforme sua rotina, digestão e orientação profissional; o total diário de energia e proteína continua sendo a prioridade.</div>';
-  $('menuBox').innerHTML=html;
+  const base={
+    breakfast:applySimpleRestrictions(weekly.breakfast),
+    lunch:applySimpleRestrictions(weekly.lunch),
+    snack:applySimpleRestrictions(weekly.snack),
+    dinner:applySimpleRestrictions(weekly.dinner)
+  };
+  const ex0=applySimpleRestrictions(extra[0]),ex1=applySimpleRestrictions(extra[1]);
+  if(n<=3)return [['Café da manhã',base.breakfast],['Almoço',base.lunch],['Jantar',base.dinner]];
+  if(n===4)return [['Café da manhã',base.breakfast],['Almoço',base.lunch],['Lanche da tarde',base.snack],['Jantar',base.dinner]];
+  if(n===5)return [['Café da manhã',base.breakfast],['Almoço',base.lunch],['Lanche da tarde',base.snack],['Jantar',base.dinner],['Ceia',ex1]];
+  return [['Café da manhã',base.breakfast],['Lanche da manhã',ex0],['Almoço',base.lunch],['Lanche da tarde',base.snack],['Jantar',base.dinner],['Ceia',ex1]];
 }
 function renderFoods(){const q=($('foodSearch').value||'').toLowerCase(),f=['Aveia em flocos','Arroz integral','Feijão','Lentilha','Grão-de-bico','Tofu','Ovo','Peito de frango','Peixe','Banana','Maçã','Brócolis','Tomate','Cenoura','Abacate','Quinoa','Tapioca'];$('foodBox').innerHTML=f.filter(x=>x.toLowerCase().includes(q)).map(x=>'<div class="food"><b>'+x+'</b><span class="small">Base demonstrativa</span></div>').join('')||'<p>Nenhum alimento encontrado.</p>'}
 function renderDash(){const ready=d.age&&d.weight&&d.height;$('dashBox').innerHTML=ready?'<div class="card"><h3>Seu perfil está pronto</h3><p>Você pode revisar a avaliação ou explorar o cardápio semanal.</p></div>':'<div class="card"><h3>Vamos começar?</h3><p>Complete a avaliação para gerar estimativas e organizar suas escolhas.</p></div>'}
