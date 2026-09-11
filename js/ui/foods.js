@@ -2,7 +2,9 @@ import { escapeHTML, formatNumber } from './dom.js';
 
 function sourceLabel(food) {
   const source = (food.sources || []).find(item => item.record_id) || {};
-  return source.source_id === 'USDA_FDC' ? `USDA FoodData Central • FDC ${source.record_id}` : `${source.source_id || 'Fonte'} ${source.record_id || ''}`.trim();
+  if (source.source_id === 'USDA_FDC') return `USDA FoodData Central • FDC ${source.record_id}`;
+  if (source.source_id === 'TACO_NEPA_UNICAMP') return `TACO 4ª ed. (2011) • registro ${source.record_id}`;
+  return `${source.source_id || 'Fonte'} ${source.record_id || ''}`.trim();
 }
 
 export function renderFoods(container, database, query = '') {
