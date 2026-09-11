@@ -1,57 +1,142 @@
 {
-  "version": "2.0.0",
-  "status": "foundation_quarantine_mode",
+  "version": "3.0.0",
+  "status": "validated_starter_core",
   "basis": "100 g edible portion",
-  "safety_note": "Records without verified record-level provenance are not eligible for nutrient calculations. Seed food identities may be used for classification and UI only until verified.",
+  "license": "USDA FoodData Central data are CC0 1.0. Values are stored unchanged on a 100 g basis; Portuguese names are interface labels.",
+  "source_citation": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.",
+  "safety_note": "Only records with a source record id and complete energy/macronutrient data are eligible for calculations. This starter core is intentionally small and expands only with traceable data.",
   "foods": [
     {
-      "id": "NT-BR-000001",
+      "id": "USDA-169704",
       "name": "Arroz integral cozido",
-      "aliases": [
-        "arroz integral"
-      ],
-      "group": "cereal",
+      "aliases": ["arroz integral", "brown rice"],
+      "group": "cereais",
       "food_state": "cooked",
-      "processing_level": "minimally_processed",
-      "nutrition": {
-        "basis_g": 100,
-        "energy_kcal": null,
-        "protein_g": null,
-        "carbohydrate_g": null,
-        "fiber_g": null,
-        "fat_g": null,
-        "sodium_mg": null
-      },
-      "sources": [
-        {
-          "source_id": "TBCA",
-          "record_id": null,
-          "status": "quarantined",
-          "accessed_at": "2026-09-11"
-        }
-      ],
-      "diet_compatibility": {
-        "omnivore": "allowed",
-        "vegetarian": "allowed",
-        "vegan": "allowed",
-        "gluten_free": "naturally_gluten_free",
-        "lactose_free": "naturally_lactose_free"
-      },
-      "restrictions": [],
-      "allergens": [],
-      "household_measures": [
-        {
-          "label": "porção doméstica",
-          "grams": 100,
-          "note": "Equivalência caseira precisa de validação específica antes de exibição clínica"
-        }
-      ],
-      "tags": [
-        "whole_grain",
-        "gluten_free_natural",
-        "vegan",
-        "brazilian_food"
-      ]
+      "nutrition": {"basis_g":100,"energy_kcal":123,"protein_g":2.74,"carbohydrate_g":25.58,"fiber_g":1.6,"fat_g":0.97,"sodium_mg":4},
+      "sources": [{"source_id":"USDA_FDC","record_id":"169704","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["carbohydrate","whole_grain","vegan"]
+    },
+    {
+      "id": "USDA-173735",
+      "name": "Feijão preto cozido sem sal",
+      "aliases": ["feijão", "feijão preto", "black beans"],
+      "group": "leguminosas",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":132,"protein_g":8.86,"carbohydrate_g":23.7,"fiber_g":8.7,"fat_g":0.54,"sodium_mg":1},
+      "sources": [{"source_id":"USDA_FDC","record_id":"173735","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["legume","protein_plant","fiber","vegan"]
+    },
+    {
+      "id": "USDA-171477",
+      "name": "Peito de frango assado sem pele",
+      "aliases": ["frango", "peito de frango", "chicken breast"],
+      "group": "proteínas animais",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":165,"protein_g":31,"carbohydrate_g":0,"fiber_g":0,"fat_g":3.6,"sodium_mg":74},
+      "sources": [{"source_id":"USDA_FDC","record_id":"171477","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"not_allowed","vegan":"not_allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["protein_animal","meat"]
+    },
+    {
+      "id": "USDA-173424",
+      "name": "Ovo cozido",
+      "aliases": ["ovo", "ovos", "hard boiled egg"],
+      "group": "ovos",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":155,"protein_g":12.6,"carbohydrate_g":1.12,"fiber_g":0,"fat_g":10.6,"sodium_mg":124},
+      "sources": [{"source_id":"USDA_FDC","record_id":"173424","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"not_allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": ["egg"], "tags": ["protein_animal","vegetarian"]
+    },
+    {
+      "id": "USDA-173944",
+      "name": "Banana crua",
+      "aliases": ["banana", "banana madura"],
+      "group": "frutas",
+      "food_state": "raw",
+      "nutrition": {"basis_g":100,"energy_kcal":89,"protein_g":1.09,"carbohydrate_g":22.84,"fiber_g":2.6,"fat_g":0.33,"sodium_mg":1},
+      "sources": [{"source_id":"USDA_FDC","record_id":"173944","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["fruit","carbohydrate","vegan"]
+    },
+    {
+      "id": "USDA-172421",
+      "name": "Lentilha cozida sem sal",
+      "aliases": ["lentilha", "lentils"],
+      "group": "leguminosas",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":116,"protein_g":9.02,"carbohydrate_g":20.13,"fiber_g":7.9,"fat_g":0.38,"sodium_mg":2},
+      "sources": [{"source_id":"USDA_FDC","record_id":"172421","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["legume","protein_plant","fiber","vegan"]
+    },
+    {
+      "id": "USDA-172448",
+      "name": "Tofu firme",
+      "aliases": ["tofu", "soja", "firm tofu"],
+      "group": "proteínas vegetais",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":78,"protein_g":9.04,"carbohydrate_g":2.85,"fiber_g":0.9,"fat_g":4.17,"sodium_mg":12},
+      "sources": [{"source_id":"USDA_FDC","record_id":"172448","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": ["soy"], "tags": ["protein_plant","vegan"]
+    },
+    {
+      "id": "USDA-170440",
+      "name": "Batata cozida sem casca e sem sal",
+      "aliases": ["batata", "batata inglesa", "potato"],
+      "group": "tubérculos",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":86,"protein_g":1.71,"carbohydrate_g":20.01,"fiber_g":1.8,"fat_g":0.1,"sodium_mg":5},
+      "sources": [{"source_id":"USDA_FDC","record_id":"170440","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["carbohydrate","tuber","vegan"]
+    },
+    {
+      "id": "USDA-173905",
+      "name": "Aveia cozida em água sem sal",
+      "aliases": ["aveia", "mingau de aveia", "oatmeal"],
+      "group": "cereais",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":71,"protein_g":2.54,"carbohydrate_g":12,"fiber_g":1.7,"fat_g":1.52,"sodium_mg":4},
+      "sources": [{"source_id":"USDA_FDC","record_id":"173905","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"requires_certified_oats","lactose_free":"naturally_lactose_free"},
+      "allergens": ["oats_cross_contact_risk"], "tags": ["carbohydrate","whole_grain","vegan"]
+    },
+    {
+      "id": "USDA-171284",
+      "name": "Iogurte natural integral",
+      "aliases": ["iogurte", "iogurte natural", "yogurt"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":61,"protein_g":3.47,"carbohydrate_g":4.66,"fiber_g":0,"fat_g":3.25,"sodium_mg":46},
+      "sources": [{"source_id":"USDA_FDC","record_id":"171284","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"not_allowed","gluten_free":"naturally_gluten_free","lactose_free":"not_allowed"},
+      "allergens": ["milk"], "tags": ["dairy","protein_animal","vegetarian"]
+    },
+    {
+      "id": "USDA-169967",
+      "name": "Brócolis cozido sem sal",
+      "aliases": ["brócolis", "brocolis", "broccoli"],
+      "group": "vegetais",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":35,"protein_g":2.38,"carbohydrate_g":7.18,"fiber_g":3.3,"fat_g":0.41,"sodium_mg":41},
+      "sources": [{"source_id":"USDA_FDC","record_id":"169967","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["vegetable","fiber","vegan"]
+    },
+    {
+      "id": "USDA-170394",
+      "name": "Cenoura cozida sem sal",
+      "aliases": ["cenoura", "carrots"],
+      "group": "vegetais",
+      "food_state": "cooked",
+      "nutrition": {"basis_g":100,"energy_kcal":35,"protein_g":0.76,"carbohydrate_g":8.22,"fiber_g":3,"fat_g":0.18,"sodium_mg":58},
+      "sources": [{"source_id":"USDA_FDC","record_id":"170394","status":"validated","license":"CC0-1.0"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"naturally_gluten_free","lactose_free":"naturally_lactose_free"},
+      "allergens": [], "tags": ["vegetable","fiber","vegan"]
     }
   ]
 }
