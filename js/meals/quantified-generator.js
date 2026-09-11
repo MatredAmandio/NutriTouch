@@ -1,5 +1,5 @@
 import { DAYS } from './generator.js';
-import { QUANTIFIED_RECIPES } from './quantified-recipes.js';
+import { QUANTIFIED_RECIPES } from './quantified-library.js';
 import { buildFoodIndex, mealShares, scaleRecipeToTarget, addNutrients } from './nutrition.js';
 
 const STYLE_PREFERENCES = new Set(['brasileira', 'mediterranea', 'fitness', 'vegetariana', 'vegana']);
