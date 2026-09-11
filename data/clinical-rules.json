@@ -1,1 +1,41 @@
-{"version":"1.0","rules":[{"id":"CELIAC-001","condition":"celiac","action":"block_contains_gluten_and_unknown_or_cross_contamination_risk"},{"id":"ALLERGY-001","condition":"food_allergy","action":"block_contains_allergen"},{"id":"REVIEW-001","condition":"review_required","action":"show_professional_review_alert"}]}
+{
+  "version": "2.0.0",
+  "scope": "Safety gates only. Not diagnosis, treatment or individualized prescription.",
+  "rules": [
+    {
+      "id": "AGE-001",
+      "condition": "age_10_18",
+      "action": "use_bmi_for_age_and_sex_reference; block_automatic_weight_goal_adjustment"
+    },
+    {
+      "id": "PREG-001",
+      "condition": "pregnancy",
+      "action": "block_automatic_energy_deficit_and_surplus; require_professional_individualization"
+    },
+    {
+      "id": "CELIAC-001",
+      "condition": "celiac",
+      "action": "block_contains_gluten_and_unknown_or_cross_contamination_risk"
+    },
+    {
+      "id": "ALLERGY-001",
+      "condition": "food_allergy",
+      "action": "block_contains_allergen; require_product_level_ingredient_check"
+    },
+    {
+      "id": "KIDNEY-001",
+      "condition": "kidney_disease",
+      "action": "exclude_from_generic_menu_generator; require_professional_plan"
+    },
+    {
+      "id": "DIAB-001",
+      "condition": "diabetes",
+      "action": "allow_general_guidance_only; flag_individualization"
+    },
+    {
+      "id": "HTN-001",
+      "condition": "hypertension",
+      "action": "allow_general_guidance_only; flag_individualization"
+    }
+  ]
+}
