@@ -1,0 +1,131 @@
+{
+  "version": "3.2.0",
+  "status": "validated_taco_breads",
+  "basis": "100 g edible portion",
+  "source_citation": "NEPA/UNICAMP. Tabela Brasileira de Composição de Alimentos – TACO. 4ª edição revisada e ampliada. Campinas, 2011.",
+  "source_url": "https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf",
+  "license": "Reprodução permitida com citação da fonte, conforme a publicação TACO 4ª edição.",
+  "safety_note": "Registros TACO são aceitos somente quando possuem número rastreável na 4ª edição (2011) e energia, proteína, carboidratos e gorduras numéricos completos. Compatibilidade com glúten, lactose e dietas vegetarianas/veganas permanece conservadora quando a tabela de composição não comprova ingredientes.",
+  "foods": [
+    {
+      "id": "TACO-2011-048",
+      "name": "Pão de aveia, forma",
+      "aliases": ["pão de aveia", "pão aveia forma"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":343,"protein_g":12.4,"carbohydrate_g":59.6,"fiber_g":6.0,"fat_g":5.7,"sodium_mg":606},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"48","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": [],
+      "tags": ["bread","oat","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-049",
+      "name": "Pão de soja",
+      "aliases": ["pão soja"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":309,"protein_g":11.3,"carbohydrate_g":56.5,"fiber_g":5.7,"fat_g":3.6,"sodium_mg":663},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"49","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["soy"],
+      "tags": ["bread","soy","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-050",
+      "name": "Pão de glúten, forma",
+      "aliases": ["pão de glúten", "pão gluten forma"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":253,"protein_g":12.0,"carbohydrate_g":44.1,"fiber_g":2.5,"fat_g":2.7,"sodium_mg":22},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"50","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"not_allowed","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["gluten"],
+      "tags": ["bread","gluten","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-051",
+      "name": "Pão de milho, forma",
+      "aliases": ["pão de milho", "pão milho forma"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":292,"protein_g":8.3,"carbohydrate_g":56.4,"fiber_g":4.3,"fat_g":3.1,"sodium_mg":507},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"51","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": [],
+      "tags": ["bread","corn","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-052",
+      "name": "Pão de trigo, forma, integral",
+      "aliases": ["pão integral", "pão de trigo integral", "pão forma integral"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":253,"protein_g":9.4,"carbohydrate_g":49.9,"fiber_g":6.9,"fat_g":3.7,"sodium_mg":506},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"52","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"not_allowed","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["gluten"],
+      "tags": ["bread","wheat","whole_grain","gluten","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-053",
+      "name": "Pão de trigo, francês",
+      "aliases": ["pão francês", "pão de sal", "cacetinho"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":300,"protein_g":8.0,"carbohydrate_g":58.6,"fiber_g":2.3,"fat_g":3.1,"sodium_mg":648},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"53","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"not_allowed","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["gluten"],
+      "tags": ["bread","wheat","brazilian","gluten","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-054",
+      "name": "Pão de trigo, sovado",
+      "aliases": ["pão sovado", "pão de trigo sovado"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":311,"protein_g":8.4,"carbohydrate_g":61.5,"fiber_g":2.4,"fat_g":2.8,"sodium_mg":431},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"54","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"not_allowed","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["gluten"],
+      "tags": ["bread","wheat","gluten","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-063",
+      "name": "Torrada de pão francês",
+      "aliases": ["torrada pão francês", "torrada de pão francês"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":377,"protein_g":10.5,"carbohydrate_g":74.6,"fiber_g":3.4,"fat_g":3.3,"sodium_mg":829},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"63","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"unknown_requires_ingredient_check","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": [],
+      "tags": ["bread","toast","brazilian","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-140",
+      "name": "Pão de queijo, assado",
+      "aliases": ["pão de queijo assado", "pão de queijo"],
+      "group": "pães",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":363,"protein_g":5.1,"carbohydrate_g":34.2,"fiber_g":0.6,"fat_g":24.6,"sodium_mg":773},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"140","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "tags": ["bread","cheese","brazilian","dairy","restriction_profile_unverified"]
+    },
+    {
+      "id": "TACO-2011-141",
+      "name": "Pão de queijo, cru",
+      "aliases": ["pão de queijo cru"],
+      "group": "pães",
+      "food_state": "raw",
+      "nutrition": {"basis_g":100,"energy_kcal":295,"protein_g":3.6,"carbohydrate_g":38.5,"fiber_g":1.0,"fat_g":14.0,"sodium_mg":405},
+      "sources": [{"source_id":"TACO_NEPA_UNICAMP","record_id":"141","edition":"4ª edição revisada e ampliada","year":2011,"status":"validated","source_url":"https://www.ctdr.ufpb.br/bsctdr/contents/documentos/taco_4_edicao_ampliada_e_revisada.pdf"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "tags": ["bread","cheese","raw","not_ready_to_eat","dairy","restriction_profile_unverified"]
+    }
+  ]
+}
