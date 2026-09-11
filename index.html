@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#218C5A">
+  <meta name="theme-color" content="#2F6B49">
   <meta name="color-scheme" content="light">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div class="brandmark" aria-hidden="true">N</div>
+      <div class="brandmark" aria-hidden="true"></div>
       <div>
         <strong class="brandname">NutriTouch</strong>
         <span class="tagline">A ciência da nutrição, no seu ritmo.</span>
@@ -29,14 +29,23 @@
 
     <main>
       <section id="welcome" class="screen">
-        <div class="welcome-mark brandmark">N</div>
-        <h1>A ciência da nutrição,<br>no seu ritmo.</h1>
-        <p>Estimativas nutricionais transparentes, cardápio estrutural e acompanhamento de evolução.</p>
-        <div class="card">
+        <div class="welcome-hero">
+          <span class="welcome-kicker">Cuidado, ciência e vida real</span>
+          <h1>Uma vida mais saudável começa aqui.</h1>
+          <p>Conheça seu corpo, faça melhores escolhas e evolua no seu tempo.</p>
+          <div class="hero-illustration" role="img" aria-label="Ilustração de uma refeição colorida e equilibrada"></div>
+          <div class="welcome-benefits" aria-label="Benefícios do NutriTouch">
+            <div class="welcome-benefit"><b>⚡</b>Mais energia</div>
+            <div class="welcome-benefit"><b>🌿</b>Hábitos possíveis</div>
+            <div class="welcome-benefit"><b>♡</b>Você no centro</div>
+          </div>
+          <p class="welcome-note">“Pequenas escolhas, grandes conquistas.”</p>
+        </div>
+        <div class="card card-soft">
           <h3>Cuidado + ciência</h3>
           <p>O NutriTouch organiza um ponto de partida e aplica limites de segurança. Ele não diagnostica nem substitui nutricionista ou médico.</p>
         </div>
-        <button class="primary-button" data-action="start-assessment">Começar avaliação</button>
+        <button class="primary-button" data-action="start-assessment">Começar avaliação →</button>
       </section>
 
       <section id="assessment" class="screen">
@@ -52,16 +61,18 @@
 
       <section id="result" class="screen">
         <button class="text-button" data-action="edit-assessment">← Editar avaliação</button>
+        <span class="welcome-kicker">Sua base, com transparência</span>
         <h1>Sua base nutricional</h1>
-        <p>V16: gasto estimado → ajuste → meta → macros → segurança.</p>
+        <p>Gasto estimado → ajuste → meta → macros → segurança.</p>
         <div id="resultBox"></div>
         <button class="primary-button" data-action="show-menu">Ver cardápio</button>
         <button class="secondary-button" data-nav="dashboard">Ir para o painel</button>
       </section>
 
       <section id="dashboard" class="screen">
+        <span class="welcome-kicker">Seu ritmo, seus dados</span>
         <h1>Seu painel 🌱</h1>
-        <p>Consistência, dados claros e acompanhamento ao longo do tempo.</p>
+        <p>Consistência, clareza e cuidado para acompanhar sua jornada.</p>
         <div id="dashboardBox"></div>
         <div id="dashboardActions">
           <button class="primary-button" data-action="show-menu">Abrir cardápio</button>
@@ -73,24 +84,27 @@
       </section>
 
       <section id="menu" class="screen">
+        <span class="welcome-kicker">Comida real, no seu ritmo</span>
         <h1>Seu cardápio</h1>
-        <p>Estrutura semanal sem calorias inventadas. O cálculo por refeição só será liberado com alimentos validados.</p>
+        <p>Uma estrutura semanal visual e acolhedora, sem inventar dados nutricionais.</p>
         <div class="day-tabs" id="dayTabs"></div>
         <div id="menuBox"></div>
         <button class="secondary-button" id="refreshMenu">↻ Gerar outra rotação</button>
       </section>
 
       <section id="foods" class="screen">
+        <span class="welcome-kicker">Base segura</span>
         <h1>Alimentos</h1>
-        <p>A V16 distingue identidade alimentar de dado nutricional apto para cálculo.</p>
+        <p>Identidade alimentar é diferente de dado nutricional apto para cálculo — aqui você vê essa diferença com clareza.</p>
         <div class="database-note" id="foodDbStatus">Carregando base...</div>
         <input id="foodSearch" class="search-input" placeholder="Buscar alimento..." autocomplete="off">
         <div id="foodBox"></div>
       </section>
 
       <section id="evolution" class="screen">
+        <span class="welcome-kicker">Cada conquista conta</span>
         <h1>Evolução</h1>
-        <p>Registre medidas por data para acompanhar tendência, sem transformar um único dia em conclusão.</p>
+        <div class="evolution-intro">Registre suas medidas por data e acompanhe tendências com calma. Um único dia não define sua trajetória.</div>
         <form id="evolutionForm" class="card">
           <label>Data<input id="evolutionDate" name="date" type="date" required></label>
           <div class="field-row">
@@ -108,7 +122,7 @@
 
     <nav class="bottom-nav" aria-label="Navegação principal" hidden>
       <button data-nav="dashboard"><span>⌂</span>Início</button>
-      <button data-nav="menu"><span>🍽️</span>Cardápio</button>
+      <button data-nav="menu"><span>♨</span>Cardápio</button>
       <button data-nav="foods"><span>◉</span>Alimentos</button>
       <button data-nav="evolution"><span>↗</span>Evolução</button>
     </nav>
