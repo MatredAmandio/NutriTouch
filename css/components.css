@@ -15,6 +15,8 @@ h3{color:var(--green-dark);margin:0 0 8px}
 p{line-height:1.5;color:var(--muted)}
 .card,.metric,.meal-card,.history-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
 .card{padding:18px;margin:14px 0}
+.compact-card{padding:14px 16px}
+.compact-card p{margin:5px 0 0}
 .primary-button,.secondary-button{
   width:100%;min-height:52px;border-radius:17px;padding:14px 16px;margin-top:10px;font-weight:800;cursor:pointer
 }
@@ -63,8 +65,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);b
 .day-tab.is-active{background:var(--green);color:#fff;border-color:var(--green)}
 .menu-status{background:#F4FAF5}
 .meal-card{padding:16px;margin:11px 0}
+.meal-card.blocked-meal{border-color:#E8C66E;background:#FFFBEE}
 .meal-header{display:flex;justify-content:space-between;gap:10px;color:var(--green);font-weight:800;font-size:12px}
 .meal-header small{color:var(--muted);font-weight:600}
+.meal-role{display:inline-block;margin-left:5px;padding:3px 7px;border-radius:999px;background:#E7F5EC;color:var(--green-dark);font-size:10px}
 .meal-card h3{margin-top:8px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips span{background:#F2F8F3;color:var(--green-dark);border-radius:999px;padding:6px 9px;font-size:12px}
