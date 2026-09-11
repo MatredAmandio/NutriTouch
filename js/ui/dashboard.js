@@ -81,6 +81,7 @@ export function renderDashboard(container, profile, result) {
       <div class="quick-card"><b>🍽</b>${profile.meals} refeições</div>
       <div class="quick-card"><b>♡</b>No seu ritmo</div>
     </div>
+    <div class="dashboard-food-photo" role="img" aria-label="Foto de uma refeição equilibrada com frango e vegetais"></div>
     <div class="card">
       <h3>Seu plano de hoje</h3>
       <p>Use o cardápio como estrutura de refeições e acompanhe sua evolução ao longo do tempo.</p>
