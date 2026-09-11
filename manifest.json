@@ -7,6 +7,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#F3F8F4",
   "theme_color": "#218C5A",
@@ -16,19 +17,27 @@
       "src": "./icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
       "name": "Cardápio",
       "short_name": "Cardápio",
+      "description": "Abrir a estrutura semanal de refeições",
       "url": "./?screen=menu",
       "icons": [{"src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml"}]
     },
     {
       "name": "Evolução",
       "short_name": "Evolução",
+      "description": "Registrar peso e medidas",
       "url": "./?screen=evolution",
       "icons": [{"src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml"}]
     }
