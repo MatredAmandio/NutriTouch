@@ -1,1 +1,62 @@
-{"version":"1.0","profiles":[{"id":"omnivore","label":"Onívoro"},{"id":"ovolacto_vegetarian","label":"Ovolactovegetariano"},{"id":"vegetarian","label":"Vegetariano"},{"id":"vegan","label":"Vegano"},{"id":"gluten_free","label":"Sem glúten"},{"id":"lactose_free","label":"Sem lactose"},{"id":"plant_based","label":"Plant-based"},{"id":"ayurvedic_inspired","label":"Inspirada na culinária ayurvédica"}]}
+{
+  "version": "2.0.0",
+  "profiles": [
+    {
+      "id": "omnivore",
+      "label": "Onívoro",
+      "type": "dietary_pattern"
+    },
+    {
+      "id": "ovolacto_vegetarian",
+      "label": "Ovolactovegetariano",
+      "type": "dietary_pattern"
+    },
+    {
+      "id": "vegetarian",
+      "label": "Vegetariano",
+      "type": "dietary_pattern"
+    },
+    {
+      "id": "vegan",
+      "label": "Vegano",
+      "type": "dietary_pattern"
+    },
+    {
+      "id": "fitness",
+      "label": "Fitness e performance",
+      "type": "goal_context",
+      "features": [
+        "adequate_protein",
+        "training_context",
+        "meal_distribution"
+      ]
+    },
+    {
+      "id": "gluten_free",
+      "label": "Sem glúten",
+      "type": "restriction_profile"
+    },
+    {
+      "id": "lactose_free",
+      "label": "Sem lactose",
+      "type": "restriction_profile"
+    },
+    {
+      "id": "low_fructose",
+      "label": "Restrição de frutose",
+      "type": "restriction_profile",
+      "requires_individualization": true
+    },
+    {
+      "id": "plant_based",
+      "label": "Plant-based",
+      "type": "dietary_pattern"
+    },
+    {
+      "id": "ayurvedic_inspired",
+      "label": "Inspirada na culinária ayurvédica",
+      "type": "culinary_inspiration",
+      "clinical_treatment": false
+    }
+  ]
+}
