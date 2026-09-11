@@ -1,5 +1,12 @@
 import { formatDate, formatNumber } from './dom.js';
 
+const GOAL_LABELS = Object.freeze({
+  loss: 'Emagrecimento',
+  recomp: 'Recomposição corporal',
+  gain: 'Ganho de massa',
+  maintenance: 'Manutenção'
+});
+
 function safetyClass(level) {
   if (level === 'RED') return 'danger';
   if (level === 'YELLOW') return 'warning';
@@ -35,11 +42,12 @@ export function renderResult(container, result) {
 
     ${plan ? `<div class="card">
       <h3>Prazo e meta</h3>
-      <div class="data-row"><b>Prazo informado</b><span>${plan.months} mês(es)</span></div>
+      <div class="data-row"><b>Prazo originalmente informado</b><span>${plan.months} mês(es)</span></div>
       <div class="data-row"><b>Data-alvo</b><span>${formatDate(plan.targetDate)}</span></div>
-      <div class="data-row"><b>Dias reais de calendário</b><span>${plan.days}</span></div>
+      <div class="data-row"><b>Dias restantes</b><span>${plan.days}</span></div>
       <div class="data-row"><b>Peso-alvo</b><span>${formatNumber(plan.target, 1)} kg</span></div>
-      <div class="data-row"><b>Variação planejada</b><span>${plan.deltaKg > 0 ? '+' : ''}${formatNumber(plan.deltaKg, 1)} kg</span></div>
+      <div class="data-row"><b>Variação restante estimada</b><span>${plan.deltaKg > 0 ? '+' : ''}${formatNumber(plan.deltaKg, 1)} kg</span></div>
+      ${plan.expired ? '<p class="helper">A data-alvo já passou. Edite a avaliação para definir um novo prazo.</p>' : ''}
       ${adjustment.capped ? '<p class="helper">O ajuste solicitado foi limitado pela camada de segurança da V16.</p>' : ''}
     </div>` : ''}
 
@@ -56,7 +64,7 @@ export function renderResult(container, result) {
 
 export function renderDashboard(container, profile, result) {
   if (!result?.ok) {
-    container.innerHTML = `<div class="card"><h3>Vamos começar?</h3><p>Complete a avaliação para gerar suas estimativas.</p></div>`;
+    container.innerHTML = `<div class="card"><h3>Vamos começar?</h3><p>Complete as cinco etapas da avaliação para gerar suas estimativas.</p></div>`;
     return;
   }
 
@@ -69,7 +77,7 @@ export function renderDashboard(container, profile, result) {
     <div class="card">
       <h3>Seu perfil está pronto</h3>
       <p>Use o cardápio como estrutura de refeições e acompanhe sua evolução ao longo do tempo.</p>
-      <div class="data-row"><b>Objetivo</b><span>${profile.goal}</span></div>
+      <div class="data-row"><b>Objetivo</b><span>${GOAL_LABELS[profile.goal] || 'Objetivo personalizado'}</span></div>
       <div class="data-row"><b>Refeições/dia</b><span>${profile.meals}</span></div>
     </div>`;
 }
