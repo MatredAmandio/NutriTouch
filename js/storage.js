@@ -6,6 +6,12 @@ export const STORAGE_KEYS = Object.freeze({
   evolution: 'nutritouch_evolution_v1'
 });
 
+const ASSESSMENT_FIELDS = Object.freeze([
+  'age','sex','weight','height','goal','resistance','target','deadline','activity',
+  'meals','trainingFreq','trainingType','trainingMin','trainingTime','preferences',
+  'avoid','allergies','intolerance','condition'
+]);
+
 export const DEFAULT_PROFILE = Object.freeze({
   age: '',
   sex: 'female',
@@ -21,17 +27,33 @@ export const DEFAULT_PROFILE = Object.freeze({
   trainingType: 'mixed',
   trainingMin: '',
   trainingTime: '',
-  steps: '',
-  occupation: 'mixed',
-  cook: 'moderate',
   preferences: 'brasileira',
   avoid: '',
   allergies: '',
   intolerance: 'none',
   condition: '',
+  _assessmentCompleted: false,
+  _assessmentCompletedSignature: '',
+  _assessmentCompletedAt: '',
   _goalStartDate: '',
+  _goalTargetDate: '',
   _goalSignature: ''
 });
+
+export function localDateISO(date = new Date()) {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function assessmentSignature(profile = {}) {
+  const snapshot = {};
+  for (const key of ASSESSMENT_FIELDS) snapshot[key] = profile[key] ?? '';
+  return JSON.stringify(snapshot);
+}
 
 export function readJSON(key, fallback = null) {
   try {
@@ -59,13 +81,26 @@ export function saveProfile(profile) {
   return saved;
 }
 
+export function completeAssessment(profile) {
+  const completed = {
+    ...DEFAULT_PROFILE,
+    ...profile,
+    _assessmentCompleted: true,
+    _assessmentCompletedAt: new Date().toISOString()
+  };
+  completed._assessmentCompletedSignature = assessmentSignature(completed);
+  return saveProfile(completed);
+}
+
 export function resetProfile() {
   localStorage.removeItem(STORAGE_KEYS.profile);
   localStorage.removeItem(STORAGE_KEYS.profileVersion);
 }
 
 export function isProfileComplete(profile) {
-  return Boolean(Number(profile.age) && Number(profile.weight) && Number(profile.height));
+  const hasCoreData = Boolean(Number(profile?.age) && Number(profile?.weight) && Number(profile?.height));
+  if (!hasCoreData || profile?._assessmentCompleted !== true) return false;
+  return profile._assessmentCompletedSignature === assessmentSignature(profile);
 }
 
 export function getEvolutionEntries() {
@@ -75,19 +110,46 @@ export function getEvolutionEntries() {
     : [];
 }
 
-export function saveEvolutionEntry(entry) {
+export function findEvolutionEntry(date) {
+  return getEvolutionEntries().find(item => item.date === String(date)) || null;
+}
+
+function metric(value, min, max) {
+  if (value === '' || value == null) return null;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) return NaN;
+  return number;
+}
+
+export function saveEvolutionEntry(entry, { replace = false } = {}) {
   const normalized = {
-    date: String(entry.date || new Date().toISOString().slice(0, 10)),
-    weight: entry.weight === '' || entry.weight == null ? null : Number(entry.weight),
-    waist: entry.waist === '' || entry.waist == null ? null : Number(entry.waist),
-    hip: entry.hip === '' || entry.hip == null ? null : Number(entry.hip),
+    date: String(entry.date || localDateISO()),
+    weight: metric(entry.weight, 20, 350),
+    waist: metric(entry.waist, 20, 250),
+    hip: metric(entry.hip, 20, 300),
     notes: String(entry.notes || '').trim()
   };
 
-  const entries = getEvolutionEntries().filter(item => item.date !== normalized.date);
-  entries.push(normalized);
-  writeJSON(STORAGE_KEYS.evolution, entries);
-  return normalized;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.date)) {
+    return { ok: false, code: 'date', error: 'Informe uma data válida.' };
+  }
+  if ([normalized.weight, normalized.waist, normalized.hip].some(Number.isNaN)) {
+    return { ok: false, code: 'range', error: 'Revise as medidas informadas.' };
+  }
+  if ([normalized.weight, normalized.waist, normalized.hip].every(value => value == null)) {
+    return { ok: false, code: 'empty', error: 'Informe pelo menos peso, cintura ou quadril.' };
+  }
+
+  const entries = getEvolutionEntries();
+  const exists = entries.some(item => item.date === normalized.date);
+  if (exists && !replace) {
+    return { ok: false, code: 'duplicate', error: 'Já existe um registro nesta data.' };
+  }
+
+  const next = entries.filter(item => item.date !== normalized.date);
+  next.push(normalized);
+  writeJSON(STORAGE_KEYS.evolution, next);
+  return { ok: true, entry: normalized, replaced: exists };
 }
 
 export function deleteEvolutionEntry(date) {
