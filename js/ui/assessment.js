@@ -1,6 +1,7 @@
 import { escapeHTML } from './dom.js';
 
 const GOALS = new Set(['recomp', 'loss', 'gain', 'maintenance']);
+const ACTIVITIES = new Set(['sedentary', 'light', 'moderate', 'very']);
 const PREFERENCES = new Set(['brasileira', 'mediterranea', 'vegetariana', 'vegana', 'sem-gluten', 'fitness']);
 const INTOLERANCES = new Set(['none', 'lactose', 'gluten_intolerance', 'fructose', 'ncgs', 'other']);
 const CONDITIONS = new Set(['', 'diabetes', 'hypertension', 'pregnancy', 'elderly']);
@@ -63,13 +64,13 @@ export function renderAssessment(container, step, profile) {
 
   if (step === 3) {
     html = `<h2>Sua rotina de movimento</h2>
+      ${profile.activity === 'extreme' ? '<div class="alert warning"><strong>Nível de atividade atualizado</strong><br>A opção “Extremamente ativo” foi removida porque o motor atual não possui uma equação distinta e validada para ela. Selecione o nível mais próximo abaixo.</div>' : ''}
       <label>Atividade geral
         <select data-field="activity">
           <option value="sedentary"${selected(profile,'activity','sedentary')}>Sedentário</option>
           <option value="light"${selected(profile,'activity','light')}>Levemente ativo</option>
           <option value="moderate"${selected(profile,'activity','moderate')}>Moderadamente ativo</option>
           <option value="very"${selected(profile,'activity','very')}>Muito ativo</option>
-          <option value="extreme"${selected(profile,'activity','extreme')}>Extremamente ativo</option>
         </select>
       </label>
       <div class="field-row">
@@ -199,6 +200,7 @@ export function validateAssessmentStep(step, profile) {
   }
 
   if (step === 3) {
+    if (!ACTIVITIES.has(profile.activity)) return 'Selecione um nível de atividade disponível na V16.';
     const freq = Number(profile.trainingFreq || 0);
     const minutes = Number(profile.trainingMin || 0);
     if (!Number.isFinite(freq) || freq < 0 || freq > 7 || !Number.isFinite(minutes) || minutes < 0 || minutes > 600) {
