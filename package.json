@@ -1,9 +1,9 @@
 {
   "name": "nutritouch",
   "private": true,
-  "version": "16.0.0",
+  "version": "16.1.0",
   "type": "module",
   "scripts": {
-    "test": "node tests/v16-engine.test.mjs && node tests/v16-menu.test.mjs && node tests/v16-profile.test.mjs"
+    "test": "node tests/v16-engine.test.mjs && node tests/v16-menu.test.mjs && node tests/v16-profile.test.mjs && node tests/v16-food-engine.test.mjs"
   }
 }
