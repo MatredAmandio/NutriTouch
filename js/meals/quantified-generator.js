@@ -70,7 +70,7 @@ function stylePool(recipes, preference) {
 
 function chooseRecipe(pool, dayIndex, slotIndex, seed, used) {
   if (!pool.length) return null;
-  const start = (seed + dayIndex * 11 + slotIndex * 7) % pool.length;
+  const start = hashSeed(`${seed}|${dayIndex}|${slotIndex}`) % pool.length;
   for (let offset = 0; offset < pool.length; offset += 1) {
     const candidate = pool[(start + offset) % pool.length];
     if (!used.has(candidate.id)) return candidate;
