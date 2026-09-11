@@ -14,7 +14,7 @@
 .weekly-hero b{font-size:22px}.weekly-hero span{font-size:12px;background:rgba(255,255,255,.16);padding:7px 9px;border-radius:99px}
 .plate-rule{background:#ECF8EF;border:1px solid #CFE5D4;border-radius:18px;padding:15px;margin:12px 0}.plate-rule b{display:block;color:#164B36;margin-bottom:5px}.plate-rule span{display:block;color:#218C5A;font-weight:800;font-size:13px}.plate-rule small{display:block;color:#66756D;margin-top:6px;line-height:1.45}
 .weekly-meal{background:#fff;border:1px solid #DCE8DF;border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 6px 18px #164B3608}.weekly-meal h3{margin:0 0 5px}.weekly-meal .desc{color:#66756D;font-size:13px;margin-bottom:9px}.weekly-foods{display:flex;flex-wrap:wrap;gap:6px}.weekly-food{background:#F2F8F3;color:#164B36;border-radius:99px;padding:6px 9px;font-size:12px}.weekly-kcal{font-size:12px;color:#218C5A;font-weight:800;margin-top:9px}
- .badge-yellow{background:#FFF4D6;color:#8A5A00}.badge-red{background:#FDECEC;color:#B42318}.badge-green{background:#EAF7F1;color:#166534}.opt.pref{min-height:72px}.opt span{display:block;color:var(--m);font-size:12px;font-weight:500;margin-top:4px}.weekly-meal{padding:16px}</style></head>
+ .badge-yellow{background:#FFF4D6;color:#8A5A00}.badge-red{background:#FDECEC;color:#B42318}.badge-green{background:#EAF7F1;color:#166534}.opt.pref{min-height:72px}.opt span{display:block;color:var(--m);font-size:12px;font-weight:500;margin-top:4px}.weekly-meal{padding:16px} .fit-role{font-size:.82rem;font-weight:800;color:#2A9D8F;margin:4px 0}</style></head>
 <body><div class="app">
 <header class="top"><div class="logo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 7C22 8 10 17 10 30c0 7 5 11 12 11 13 0 20-12 17-34Z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><path d="M12 37c7-9 14-15 24-21M24 27v12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg></div><div><div class="brand">NutriTouch</div><div class="tag">A ciência da nutrição, no seu ritmo.</div></div></header>
 <main>
@@ -38,7 +38,7 @@
 </style>
 <script>
 'use strict';
-const VER='12',KEY='nutritouch_profile',VKEY='nutritouch_profile_version';
+const VER='13',KEY='nutritouch_profile',VKEY='nutritouch_profile_version';
 const EMPTY={age:'',sex:'female',weight:'',height:'',goal:'recomp',resistance:'yes',target:'',deadline:'',deadlineUnit:'months',activity:'moderate',meals:'4',trainingFreq:'',trainingType:'mixed',trainingMin:'',trainingTime:'',steps:'',occupation:'mixed',cook:'moderate',preferences:'brasileira',avoid:'',allergies:'',intolerance:'none',condition:''};
 let d={...EMPTY},step=1,day=0;
 const DAYS=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
@@ -119,18 +119,53 @@ function estimateBMR(a,sex,w,h){
   if(a<19)return null;
   return sex==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
 }
+function trainingContext(){
+  const type=d.trainingType||'none';
+  const freq=Math.max(0,Math.min(7,Number(d.trainingFreq)||0));
+  const min=Math.max(0,Number(d.trainingMin)||0);
+  const resistance=d.resistance==='yes'||type==='resistance'||type==='mixed';
+  const fitness=d.preferences==='fitness';
+  return {type,freq,min,resistance,fitness,training:type!=='none'&&freq>0};
+}
 function proteinTarget(a,sex,w){
+  const t=trainingContext();
   let gkg;
   if(a<14)gkg=.95;
   else if(a<19)gkg=.85;
   else if(a>=65)gkg=1.0;
   else gkg=.8;
-  if(a>=19&&d.condition==='') {
-    if(d.goal==='recomp'&&d.resistance==='yes')gkg=1.6;
-    else if(d.goal==='gain'&&d.resistance==='yes')gkg=1.4;
-    else if(d.resistance==='yes')gkg=Math.max(gkg,1.2);
+  if(a>=19&&d.condition===''){
+    if(t.resistance||t.fitness){
+      if(d.goal==='loss'||d.goal==='recomp')gkg=1.6;
+      else if(d.goal==='gain')gkg=1.4;
+      else gkg=1.2;
+      if(t.freq>=5&&t.min>=60&&d.goal==='recomp')gkg=1.7;
+    } else if(t.training) {
+      gkg=Math.max(gkg,1.0);
+    }
   }
-  return Math.max(gkg*w, a<19?(sex==='male'?(a<14?34:52):(a<14?34:46)):0);
+  const rdaFloor=a<19?(sex==='male'?(a<14?34:52):(a<14?34:46)):0;
+  return Math.max(gkg*w,rdaFloor);
+}
+function macroTargets(a,w,kcal,protein){
+  if(a<19)return {protein,carbs:null,fat:null};
+  const pCal=protein*4;
+  let fatKcal=kcal*.28;
+  let carbs=Math.max(0,(kcal-pCal-fatKcal)/4);
+  return {protein,carbs, fat:fatKcal/9};
+}
+function trainingMealRoles(n){
+  const time=d.trainingTime||'';
+  const type=d.trainingType||'none';
+  if(d.preferences!=='fitness'||type==='none'||!time)return {};
+  if(n===3){
+    if(time==='morning')return {0:'Pré-treino sugerido',1:'Recuperação pós-treino'};
+    if(time==='afternoon')return {1:'Pré-treino sugerido',2:'Recuperação pós-treino'};
+    return {1:'Pré-treino sugerido',2:'Recuperação pós-treino'};
+  }
+  if(time==='morning')return {0:'Pré-treino sugerido',1:'Recuperação pós-treino'};
+  if(time==='afternoon')return n>=5?{2:'Pré-treino sugerido',3:'Recuperação pós-treino'}:{1:'Pré-treino sugerido',2:'Recuperação pós-treino'};
+  return n>=5?{3:'Pré-treino sugerido',4:'Recuperação pós-treino'}:{2:'Pré-treino sugerido',3:'Recuperação pós-treino'};
 }
 function fiberTarget(a,sex,kcal){
   if(a<14)return sex==='male'?31:26;
@@ -167,7 +202,7 @@ function calc(){
   const protein=proteinTarget(a,d.sex,w);
   const fiber=fiberTarget(a,d.sex,kcal);
   const sodium=sodiumTarget(a,kcal);
-  return{age:a,imc,bmr,eer,kcal,protein,fiber,sodium,band,goalAdjusted,review,reason,pediatric:a<19,bmiClass:a<19?'Use IMC-por-idade/sexo (OMS) para classificação':adultBMIClass(imc)};
+  return{age:a,imc,bmr,eer,kcal,protein,carbs:macros.carbs,fat:macros.fat,fiber,sodium,band,goalAdjusted,review,reason,pediatric:a<19,bmiClass:a<19?'Use IMC-por-idade/sexo (OMS) para classificação':adultBMIClass(imc)};
 }
 function renderResult(){
   const r=calc();
@@ -188,7 +223,7 @@ function renderResult(){
     '</div>'+
     safety+
     '<div class="card"><h3>Referências nutricionais iniciais</h3>'+
-      '<div class="macro"><b>Proteínas</b><span>≈ '+Math.round(r.protein)+' g/dia</span></div>'+
+      '<div class="macro"><b>Proteínas</b><span>≈ '+Math.round(r.protein)+' g/dia</span></div>'+(!r.pediatric?'<div class="macro"><b>Carboidratos</b><span>≈ '+Math.round(r.carbs)+' g/dia</span></div><div class="macro"><b>Gorduras</b><span>≈ '+Math.round(r.fat)+' g/dia</span></div>':'')+
       '<div class="macro"><b>Fibras</b><span>≈ '+Math.round(r.fiber)+' g/dia</span></div>'+
       '<div class="macro"><b>Sódio</b><span>até ≈ '+Math.round(r.sodium)+' mg/dia</span></div>'+
       '<p class="small">Energia: equações EER 2023 por faixa etária e atividade. Fibras: referência por idade/sexo. Sódio: limite de referência, reduzido proporcionalmente em menores. Em doenças, gestação, crescimento ou tratamento, estes números não substituem avaliação individual.</p>'+
@@ -257,10 +292,13 @@ function renderMenu(){
   $('dayTabs').innerHTML=DAYS.map((x,i)=>'<button type="button" class="tab '+(i===day?'active':'')+'" data-day="'+i+'">'+x.slice(0,3)+'</button>').join('');
   $('dayTabs').querySelectorAll('[data-day]').forEach(b=>b.addEventListener('click',()=>{day=+b.dataset.day;renderMenu();scrollTo(0,0)}));
   let html='<div class="weekly-hero"><img src="https://images.unsplash.com/photo-'+IMG[day]+'?auto=format&fit=crop&w=1200&q=80" alt="Prato saudável representando o cardápio do dia"><div class="shade"></div><div class="copy"><b>'+DAYS[day]+'</b><span>'+n+' refeições</span></div></div><div class="plate-rule"><b>Método do prato</b><span>½ vegetais • ¼ proteína • ¼ carboidrato integral/leguminosa</span><small>Referência visual; porções são aproximadas e precisam de individualização quando necessário.</small></div>';
-  plan.forEach(([mealName,x])=>{
-    const p=x.split('|');
-    html+='<article class="weekly-meal"><div class="mealhead"><div><div class="mealname">'+mealName+'</div><div class="desc">'+p[0]+'</div></div><span class="badge">≈ '+p[2]+' kcal</span></div><div class="weekly-foods">'+p[1].split(' • ').map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="portion"><b>Porções aproximadas:</b> quantidades indicadas em gramas; use utensílios caseiros equivalentes conforme necessidade.</div></article>';
+  const roles=trainingMealRoles(n);
+  plan.forEach(([mealName,x],idx)=>{
+    const p=x.split('|'),role=roles[idx]||'';
+    const roleHtml=role?'<div class="fit-role">🏋️ '+role+'</div>':'';
+    html+='<article class="weekly-meal"><div class="mealhead"><div><div class="mealname">'+mealName+'</div>'+roleHtml+'<div class="desc">'+p[0]+'</div></div><span class="badge">≈ '+p[2]+' kcal</span></div><div class="weekly-foods">'+p[1].split(' • ').map(f=>'<span class="weekly-food">'+f+'</span>').join('')+'</div><div class="portion"><b>Porções aproximadas:</b> quantidades indicadas em gramas; use utensílios caseiros equivalentes conforme necessidade.</div></article>';
   });
+  if(d.preferences==='fitness'&&Object.keys(roles).length)html+='<div class="card small"><b>Rotina de treino:</b> estas marcações organizam refeições próximas ao horário habitual informado. Ajuste o horário conforme sua rotina, digestão e orientação profissional; o total diário de energia e proteína continua sendo a prioridade.</div>';
   $('menuBox').innerHTML=html;
 }
 function renderFoods(){const q=($('foodSearch').value||'').toLowerCase(),f=['Aveia em flocos','Arroz integral','Feijão','Lentilha','Grão-de-bico','Tofu','Ovo','Peito de frango','Peixe','Banana','Maçã','Brócolis','Tomate','Cenoura','Abacate','Quinoa','Tapioca'];$('foodBox').innerHTML=f.filter(x=>x.toLowerCase().includes(q)).map(x=>'<div class="food"><b>'+x+'</b><span class="small">Base demonstrativa</span></div>').join('')||'<p>Nenhum alimento encontrado.</p>'}
