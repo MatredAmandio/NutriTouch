@@ -4,7 +4,7 @@ export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function classifySafety({ profile, requestedKcal, expenditureKcal }) {
+export function classifySafety({ profile, requestedKcal, expenditureKcal, deadlineExpired = false }) {
   const age = Number(profile.age);
   const expenditure = Number(expenditureKcal);
   const requested = Number(requestedKcal);
@@ -39,6 +39,16 @@ export function classifySafety({ profile, requestedKcal, expenditureKcal }) {
     };
   }
 
+  if (deadlineExpired) {
+    return {
+      level: 'YELLOW',
+      blockAutomaticTarget: true,
+      requiresReview: true,
+      boundedKcal: expenditure,
+      reason: 'A data-alvo já passou. Atualize o objetivo e o prazo antes de aplicar novo ajuste energético.'
+    };
+  }
+
   if (![expenditure, requested].every(Number.isFinite) || expenditure <= 0) {
     return {
       level: 'RED',
@@ -59,7 +69,8 @@ export function classifySafety({ profile, requestedKcal, expenditureKcal }) {
     ? 'O ajuste solicitado ultrapassa o limite conservador do aplicativo; a meta foi limitada e deve ser revisada.'
     : 'Estimativa dentro dos limites conservadores do aplicativo.';
 
-  const foodRestriction = Boolean(profile.allergies) || (profile.intolerance && profile.intolerance !== 'none');
+  const foodRestriction = Boolean(String(profile.allergies || '').trim())
+    || (profile.intolerance && profile.intolerance !== 'none');
   if (foodRestriction && level === 'GREEN') {
     level = 'YELLOW';
     reason = 'Há alergia/intolerância informada; o plano alimentar exige conferência de ingredientes e contaminação cruzada.';
