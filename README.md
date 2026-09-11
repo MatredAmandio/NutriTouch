@@ -14,7 +14,10 @@ A interface foi separada do armazenamento, motor nutricional, segurança, cardá
 - `js/engine/safety.js`: limites automáticos e classificação GREEN/YELLOW/RED;
 - `js/engine/nutri-engine.js`: resposta consolidada `gasto → ajuste → meta → macros → segurança`;
 - `js/meals/generator.js`: geração semanal estrutural;
-- `js/meals/substitutions.js`: compatibilidade/substituições sem fingir equivalência nutricional;
+- `js/meals/nutrition.js`: cálculo por gramas e soma de nutrientes;
+- `js/meals/quantified-recipes.js`: receitas estruturadas ligadas a registros validados;
+- `js/meals/quantified-generator.js`: distribuição diária de energia, escala de porções e geração quantitativa;
+- `js/meals/substitutions.js`: compatibilidade e bloqueios por restrições;
 - `js/data/foods.js`: carrega `data/foods.json` e só libera para cálculo registros com proveniência e nutrientes validados;
 - `js/storage.js`: perfil V16, conclusão da avaliação e histórico de evolução;
 - `js/ui/*`: renderização das telas.
@@ -27,20 +30,37 @@ O objetivo é validado antes do cálculo: emagrecimento exige peso-alvo inferior
 
 Menores de 19 anos, gestação, diabetes, hipertensão e prazo vencido mantêm bloqueios/revisão conforme a camada de segurança. O NutriTouch não deve ser apresentado como diagnóstico, prescrição ou substituto de nutricionista/médico.
 
-## Cardápio
+## Cardápio quantitativo
 
-O cardápio não possui calorias escritas diretamente nas strings. Enquanto ingredientes não estiverem ligados a registros validados da base, as refeições são exibidas apenas como estrutura alimentar.
+Quando todos os ingredientes de uma receita estão ligados a registros validados, o NutriTouch pode calcular:
 
-A opção ayurvédica foi removida. Os perfis disponíveis são brasileira/caseira, mediterrânea, vegetariana, vegana, sem glúten e fitness/performance.
+- gramas de cada ingrediente;
+- energia da refeição;
+- proteínas, carboidratos e gorduras;
+- fibra e sódio no total diário;
+- distribuição da meta energética entre 3 e 6 refeições;
+- ajuste proporcional de porções dentro de limites conservadores.
 
-O gerador:
+Quando a base ainda não cobre uma opção segura, o app mantém o comportamento anterior: exibe apenas uma estrutura de refeição ou bloqueia a sugestão, em vez de inventar valores.
 
-- respeita filtros estruturais de glúten, lactose, vegetariano, vegano, alimentos evitados e alergias informadas;
-- bloqueia geração automática para intolerância à frutose e outras intolerâncias sem regra específica validada;
-- bloqueia cardápio automático quando a camada clínica também bloqueia a meta;
-- evita repetir automaticamente os três lanches de um mesmo dia em planos com seis refeições;
-- usa o horário habitual do treino apenas para marcar referências estruturais de pré/pós-treino;
-- permite nova rotação semanal sem sobrescrever imediatamente a escolha.
+A opção ayurvédica foi removida. Os perfis disponíveis são brasileira/caseira, mediterrânea, vegetariana, vegana, sem glúten e fitness/performance. O modo sem glúten exclui receitas com aveia comum por risco de contaminação cruzada, salvo futura inclusão de um registro certificado.
+
+## Dados de alimentos
+
+A base inicial V16.1 contém um núcleo pequeno de alimentos usados nas receitas quantitativas. Cada registro elegível exige:
+
+1. composição nutricional numérica mínima;
+2. fonte com identificador de registro;
+3. status validado/verificado/aprovado;
+4. base de referência explícita (100 g de parte comestível).
+
+O núcleo inicial usa dados do **USDA FoodData Central**, publicados sob **CC0 1.0**, com o identificador FDC preservado em cada registro. A fonte sugerida pelo USDA é: *U.S. Department of Agriculture, Agricultural Research Service. FoodData Central.*
+
+A base brasileira continua sendo uma prioridade, mas dados de terceiros não serão incorporados sem confirmação de licença compatível com o uso do produto. A expansão deve manter proveniência por registro e nunca misturar valores sem rastreabilidade.
+
+## Lista de alimentos
+
+A tela Alimentos mostra grupo, energia, proteína, carboidrato, gordura, fibra, sódio e a origem do registro. Busca por nome, alias ou grupo continua disponível. Alimentos incompletos permanecem em quarentena e não entram em cálculos.
 
 ## Evolução
 
@@ -48,18 +68,8 @@ A navegação principal é **Início · Cardápio · Alimentos · Evolução**. 
 
 Para salvar um registro é necessário informar pelo menos uma medida. Registros na mesma data pedem confirmação antes de substituir o anterior, exclusões pedem confirmação e a data padrão usa o calendário local do dispositivo em vez de UTC.
 
-## Dados de alimentos
-
-`data/foods.json` permanece em modo de quarentena. Um registro só é elegível para cálculos quando possui:
-
-1. composição nutricional numérica mínima;
-2. fonte com identificador de registro;
-3. status de fonte validado/verificado/aprovado.
-
-Dados nulos ou sem proveniência podem aparecer como identidade alimentar, mas não entram em cálculos.
-
 ## Testes e PWA
 
-`npm test` executa testes do motor, calendário real, prazo restante, segurança, gerador, restrições, conclusão da avaliação, evolução e validação da base. O workflow do GitHub Actions valida a V16 em pull requests antes de permitir deploy no `main`.
+`npm test` executa testes do motor, calendário real, prazo restante, segurança, gerador, restrições, conclusão da avaliação, evolução, base validada, cálculo por gramas e cardápio quantitativo. O workflow do GitHub Actions valida a V16 em pull requests antes de permitir deploy no `main`.
 
-O service worker V16 mantém o shell modular e a base de alimentos disponíveis offline, atualiza `foods.json` com estratégia network-first e não grava respostas HTTP com erro no cache. O manifesto possui atalho para Cardápio e Evolução e um ícone maskable dedicado.
+O service worker mantém o shell modular, o novo motor de alimentos e a base disponíveis offline, atualiza `foods.json` com estratégia network-first e não grava respostas HTTP com erro no cache.
