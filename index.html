@@ -466,6 +466,26 @@ function menuPlanForDay(i,n){
   if(n===5)return [['Café da manhã',base.breakfast],['Almoço',base.lunch],['Lanche da tarde',base.snack],['Jantar',base.dinner],['Ceia',ex1]];
   return [['Café da manhã',base.breakfast],['Lanche da manhã',ex0],['Almoço',base.lunch],['Lanche da tarde',base.snack],['Jantar',base.dinner],['Ceia',ex1]];
 }
+function renderMenu(){
+  const n=Math.max(3,Math.min(6,Number(d.meals)||4));
+  const meals=menuPlanForDay(day,n);
+  const intro=$('menuIntro');
+  if(intro) intro.textContent='Semana organizada com rotação de alimentos e preparações para reduzir repetições. As porções são aproximadas.';
+  const tabs=$('dayTabs');
+  if(tabs) tabs.innerHTML=DAYS.map((name,i)=>'<button type="button" class="'+(i===day?'active':'')+'" onclick="setMenuDay('+i+')">'+name+'</button>').join('');
+  const box=$('menuBox');
+  if(!box) return;
+  const roles=trainingMealRoles(n);
+  box.innerHTML='<div class="card"><h2>'+DAYS[day]+'</h2><p class="small">Cardápio variado conforme o perfil selecionado.</p></div>'+
+    meals.map((entry,i)=>{
+      const m=parseMeal(entry[1]);
+      const role=roles[i]?'<span class="badge">'+roles[i]+'</span>':'';
+      return '<div class="meal"><div class="mealhead"><div><div class="mealname">'+entry[0]+' '+role+'</div><div class="mealmeta">'+m.parts+'</div></div><b>'+m.kcal+' kcal</b></div><p><b>'+m.title+'</b></p></div>';
+    }).join('')+
+    '<p class="small">Estimativas alimentares. Restrições, alergias e condições clínicas exigem validação individual e de ingredientes/produtos.</p>';
+}
+window.setMenuDay=(i)=>{day=Math.max(0,Math.min(6,Number(i)||0));renderMenu();};
+window.generateMenu=()=>{day=0;renderMenu();};
 function renderFoods(){const q=($('foodSearch').value||'').toLowerCase(),f=['Aveia em flocos','Arroz integral','Feijão','Lentilha','Grão-de-bico','Tofu','Ovo','Peito de frango','Peixe','Banana','Maçã','Brócolis','Tomate','Cenoura','Abacate','Quinoa','Tapioca'];$('foodBox').innerHTML=f.filter(x=>x.toLowerCase().includes(q)).map(x=>'<div class="food"><b>'+x+'</b><span class="small">Base demonstrativa</span></div>').join('')||'<p>Nenhum alimento encontrado.</p>'}
 function renderDash(){const ready=d.age&&d.weight&&d.height;$('dashBox').innerHTML=ready?'<div class="card"><h3>Seu perfil está pronto</h3><p>Você pode revisar a avaliação ou explorar o cardápio semanal.</p></div>':'<div class="card"><h3>Vamos começar?</h3><p>Complete a avaliação para gerar estimativas e organizar suas escolhas.</p></div>'}
 window.resetAll=()=>{localStorage.removeItem(KEY);localStorage.removeItem(VKEY);d={...EMPTY};step=1;day=0;go('welcome')};
