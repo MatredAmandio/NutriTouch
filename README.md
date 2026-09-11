@@ -16,22 +16,37 @@ A interface foi separada do armazenamento, motor nutricional, segurança, cardá
 - `js/meals/generator.js`: geração semanal estrutural;
 - `js/meals/substitutions.js`: compatibilidade/substituições sem fingir equivalência nutricional;
 - `js/data/foods.js`: carrega `data/foods.json` e só libera para cálculo registros com proveniência e nutrientes validados;
-- `js/storage.js`: perfil V16 e histórico de evolução;
+- `js/storage.js`: perfil V16, conclusão da avaliação e histórico de evolução;
 - `js/ui/*`: renderização das telas.
 
-## Mudanças principais
+## Avaliação e segurança
 
-O usuário continua informando o prazo em meses, porém a V16 converte o prazo em uma data-alvo real do calendário, inclusive em finais de mês. O resultado mostra separadamente gasto estimado, ajuste aplicado, meta energética, macros e nível de segurança.
+A avaliação possui cinco etapas e só é considerada concluída depois da validação final. Idade, peso e altura isoladamente não liberam mais o perfil como pronto. Alterações posteriores invalidam a assinatura da avaliação até uma nova conclusão das cinco etapas.
 
-O cardápio deixou de carregar calorias escritas diretamente nas strings. Enquanto os ingredientes não estiverem ligados a registros validados da base de alimentos, as refeições são exibidas apenas como estrutura alimentar e o app informa que o cálculo nutricional ainda não está disponível.
+O objetivo é validado antes do cálculo: emagrecimento exige peso-alvo inferior ao peso atual, ganho exige alvo superior e manutenção ignora peso-alvo/prazo. A data-alvo é fixada no calendário quando o objetivo é concluído; recalibrações posteriores usam os **dias restantes** até essa data, sem reiniciar silenciosamente o prazo. Data-alvo vencida bloqueia novo ajuste automático até revisão.
 
-A navegação principal agora é **Início · Cardápio · Alimentos · Evolução**. A avaliação é editada a partir do perfil/painel. Evolução registra data, peso, cintura, quadril e observações no armazenamento local.
+Menores de 19 anos, gestação, diabetes, hipertensão e prazo vencido mantêm bloqueios/revisão conforme a camada de segurança. O NutriTouch não deve ser apresentado como diagnóstico, prescrição ou substituto de nutricionista/médico.
 
-## Segurança
+## Cardápio
 
-O motor é determinístico e a camada de interface não altera silenciosamente metas ou macros. Menores de 19 anos e gestação bloqueiam ajuste energético automático; condições clínicas informadas exigem revisão. Alergias e intolerâncias impedem o gerador de ignorar uma restrição quando não há opção compatível.
+O cardápio não possui calorias escritas diretamente nas strings. Enquanto ingredientes não estiverem ligados a registros validados da base, as refeições são exibidas apenas como estrutura alimentar.
 
-O NutriTouch não deve ser apresentado como diagnóstico, prescrição ou substituto de nutricionista/médico.
+A opção ayurvédica foi removida. Os perfis disponíveis são brasileira/caseira, mediterrânea, vegetariana, vegana, sem glúten e fitness/performance.
+
+O gerador:
+
+- respeita filtros estruturais de glúten, lactose, vegetariano, vegano, alimentos evitados e alergias informadas;
+- bloqueia geração automática para intolerância à frutose e outras intolerâncias sem regra específica validada;
+- bloqueia cardápio automático quando a camada clínica também bloqueia a meta;
+- evita repetir automaticamente os três lanches de um mesmo dia em planos com seis refeições;
+- usa o horário habitual do treino apenas para marcar referências estruturais de pré/pós-treino;
+- permite nova rotação semanal sem sobrescrever imediatamente a escolha.
+
+## Evolução
+
+A navegação principal é **Início · Cardápio · Alimentos · Evolução**. Evolução registra data, peso, cintura, quadril e observações localmente.
+
+Para salvar um registro é necessário informar pelo menos uma medida. Registros na mesma data pedem confirmação antes de substituir o anterior, exclusões pedem confirmação e a data padrão usa o calendário local do dispositivo em vez de UTC.
 
 ## Dados de alimentos
 
@@ -45,6 +60,6 @@ Dados nulos ou sem proveniência podem aparecer como identidade alimentar, mas n
 
 ## Testes e PWA
 
-`npm test` executa testes do motor, calendário real, segurança, gerador, restrições e validação da base. O workflow do GitHub Actions valida a V16 em pull requests antes de permitir deploy no `main`.
+`npm test` executa testes do motor, calendário real, prazo restante, segurança, gerador, restrições, conclusão da avaliação, evolução e validação da base. O workflow do GitHub Actions valida a V16 em pull requests antes de permitir deploy no `main`.
 
-O service worker V16 mantém shell modular e base de alimentos disponíveis offline, atualizando `foods.json` com estratégia network-first.
+O service worker V16 mantém o shell modular e a base de alimentos disponíveis offline, atualiza `foods.json` com estratégia network-first e não grava respostas HTTP com erro no cache. O manifesto possui atalho para Cardápio e Evolução e um ícone maskable dedicado.
