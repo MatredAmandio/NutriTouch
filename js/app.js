@@ -2,14 +2,19 @@ import {
   APP_VERSION,
   getProfile,
   saveProfile,
+  completeAssessment,
   resetProfile,
   isProfileComplete,
+  localDateISO,
   getEvolutionEntries,
+  findEvolutionEntry,
   saveEvolutionEntry,
   deleteEvolutionEntry
 } from './storage.js';
 import { calculateNutrition } from './engine/nutri-engine.js';
+import { targetDateForMonths } from './engine/goals.js';
 import { generateWeeklyPlan } from './meals/generator.js';
+import { mealPlanEligibility } from './meals/substitutions.js';
 import { loadFoodDatabase } from './data/foods.js';
 import { $, showToast } from './ui/dom.js';
 import { renderAssessment, collectAssessment, validateAssessmentStep } from './ui/assessment.js';
@@ -22,45 +27,84 @@ const state = {
   profile: getProfile(),
   step: 1,
   menuDay: 0,
+  menuRotation: 0,
+  menuBlockReason: '',
   result: null,
   mealPlan: null,
   foods: { foods: [], validated: [], quarantined: [], status: 'loading' }
 };
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateISO();
+}
+
+function dateAtNoon(iso = todayISO()) {
+  return new Date(`${iso}T12:00:00`);
 }
 
 function goalSignature(profile) {
   return `${profile.goal}|${profile.target}|${profile.deadline}`;
 }
 
-function ensureGoalStartDate() {
+function ensureGoalSchedule() {
   const signature = goalSignature(state.profile);
-  if (state.profile._goalSignature !== signature) {
-    state.profile._goalSignature = signature;
-    state.profile._goalStartDate = todayISO();
-    state.profile = saveProfile(state.profile);
-  } else if (!state.profile._goalStartDate) {
-    state.profile._goalStartDate = todayISO();
-    state.profile = saveProfile(state.profile);
+  const needsDeadline = state.profile.goal !== 'maintenance'
+    && Number(state.profile.target) > 0
+    && Number(state.profile.deadline) > 0;
+
+  if (!needsDeadline) {
+    if (state.profile._goalSignature !== signature || state.profile._goalTargetDate) {
+      state.profile = saveProfile({
+        ...state.profile,
+        _goalSignature: signature,
+        _goalStartDate: todayISO(),
+        _goalTargetDate: ''
+      });
+    }
+    return;
+  }
+
+  if (state.profile._goalSignature !== signature || !state.profile._goalTargetDate) {
+    const start = dateAtNoon();
+    const target = targetDateForMonths(start, state.profile.deadline);
+    state.profile = saveProfile({
+      ...state.profile,
+      _goalSignature: signature,
+      _goalStartDate: todayISO(),
+      _goalTargetDate: target ? localDateISO(target) : ''
+    });
   }
 }
 
-function calculationStartDate() {
-  const iso = state.profile._goalStartDate || todayISO();
-  return new Date(`${iso}T12:00:00`);
+function rotationDate() {
+  return new Date(dateAtNoon().getTime() + state.menuRotation * 7 * 86400000);
 }
 
 function recalculate() {
   if (!isProfileComplete(state.profile)) {
     state.result = null;
     state.mealPlan = null;
+    state.menuBlockReason = '';
     return;
   }
-  ensureGoalStartDate();
-  state.result = calculateNutrition(state.profile, calculationStartDate());
-  state.mealPlan = generateWeeklyPlan(state.profile);
+
+  ensureGoalSchedule();
+  state.result = calculateNutrition(state.profile, dateAtNoon());
+
+  const eligibility = mealPlanEligibility(state.profile);
+  if (state.result?.safety?.blockAutomaticTarget) {
+    state.mealPlan = null;
+    state.menuBlockReason = state.result.safety.reason;
+    return;
+  }
+  if (!eligibility.allowed) {
+    state.mealPlan = null;
+    state.menuBlockReason = eligibility.reason;
+    return;
+  }
+
+  state.menuBlockReason = '';
+  state.mealPlan = generateWeeklyPlan(state.profile, rotationDate());
 }
 
 function setActiveNav(screen) {
@@ -79,6 +123,11 @@ function go(screen) {
     section.classList.toggle('is-active', section.id === screen);
   });
   setActiveNav(screen);
+
+  const bottomNav = document.querySelector('.bottom-nav');
+  if (bottomNav) {
+    bottomNav.hidden = screen === 'welcome' || screen === 'assessment' || !isProfileComplete(state.profile);
+  }
 
   if (screen === 'assessment') renderAssessmentScreen();
   if (screen === 'result') renderResultsScreen();
@@ -102,6 +151,7 @@ function renderAssessmentScreen() {
 function persistCurrentAssessmentFields() {
   state.profile = collectAssessment($('assessmentBox'), state.profile);
   state.profile = saveProfile(state.profile);
+  return state.profile;
 }
 
 function renderResultsScreen() {
@@ -114,20 +164,33 @@ function renderDashboardScreen() {
   renderDashboard($('dashboardBox'), state.profile, state.result);
   $('dashboardActions').hidden = !isProfileComplete(state.profile);
   $('dashboardStart').hidden = isProfileComplete(state.profile);
+  if (!isProfileComplete(state.profile)) $('dashboardStart').textContent = 'Continuar avaliação';
 }
 
 function renderMenuScreen() {
   recalculate();
+  const tabs = $('dayTabs');
+  const box = $('menuBox');
+
   if (!state.mealPlan) {
-    $('menuBox').innerHTML = '<div class="card"><p>Complete a avaliação para organizar o cardápio.</p></div>';
+    tabs.innerHTML = '';
+    box.innerHTML = `<div class="card"><h3>Cardápio automático indisponível</h3><p>${state.menuBlockReason || 'Complete a avaliação para organizar o cardápio.'}</p><p class="helper">O bloqueio é intencional: o aplicativo não ignora alertas clínicos ou intolerâncias sem regra específica.</p></div>`;
     return;
   }
+
+  const hasFoodRestriction = Boolean(String(state.profile.allergies || '').trim())
+    || (state.profile.intolerance && state.profile.intolerance !== 'none');
+  const restrictionMessage = hasFoodRestriction
+    ? 'Confira ingredientes, rótulos e risco de contaminação cruzada. O filtro estrutural não substitui avaliação individual.'
+    : '';
+
   renderMealPlan({
-    tabs: $('dayTabs'),
-    container: $('menuBox'),
+    tabs,
+    container: box,
     plan: state.mealPlan,
     selectedDay: state.menuDay,
-    targetKcal: state.result?.target?.kcal
+    targetKcal: state.result?.target?.kcal,
+    safetyMessage: restrictionMessage
   });
 }
 
@@ -153,6 +216,7 @@ async function initFoods() {
 document.addEventListener('click', event => {
   const nav = event.target.closest('[data-nav]');
   if (nav) {
+    if ($('assessment').classList.contains('is-active')) persistCurrentAssessmentFields();
     go(nav.dataset.nav);
     return;
   }
@@ -176,8 +240,10 @@ document.addEventListener('click', event => {
       resetProfile();
       state.profile = getProfile();
       state.step = 1;
+      state.menuRotation = 0;
       state.result = null;
       state.mealPlan = null;
+      state.menuBlockReason = '';
       go('welcome');
       showToast('Avaliação reiniciada.');
     }
@@ -188,6 +254,15 @@ document.addEventListener('click', event => {
   if (choice) {
     state.profile = collectAssessment($('assessmentBox'), state.profile);
     state.profile[choice.dataset.choiceKey] = choice.dataset.choiceValue;
+    if (choice.dataset.choiceKey === 'goal') {
+      state.profile._goalSignature = '';
+      state.profile._goalStartDate = '';
+      state.profile._goalTargetDate = '';
+      if (choice.dataset.choiceValue === 'maintenance') {
+        state.profile.target = '';
+        state.profile.deadline = '';
+      }
+    }
     state.profile = saveProfile(state.profile);
     renderAssessmentScreen();
     return;
@@ -202,8 +277,11 @@ document.addEventListener('click', event => {
 
   const remove = event.target.closest('[data-delete-evolution]');
   if (remove) {
-    deleteEvolutionEntry(remove.dataset.deleteEvolution);
-    renderEvolutionScreen();
+    if (window.confirm('Excluir este registro de evolução?')) {
+      deleteEvolutionEntry(remove.dataset.deleteEvolution);
+      renderEvolutionScreen();
+      showToast('Registro excluído.');
+    }
   }
 });
 
@@ -214,11 +292,15 @@ $('assessmentNext').addEventListener('click', () => {
     window.alert(error);
     return;
   }
+
   if (state.step < 5) {
     state.step += 1;
     renderAssessmentScreen();
     window.scrollTo(0, 0);
   } else {
+    state.profile = completeAssessment(state.profile);
+    state.menuRotation = 0;
+    state.menuDay = 0;
     recalculate();
     go('result');
   }
@@ -236,21 +318,45 @@ $('foodSearch').addEventListener('input', renderFoodsScreen);
 $('evolutionForm').addEventListener('submit', event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
-  saveEvolutionEntry({
+  const draft = {
     date: form.get('date'),
     weight: form.get('weight'),
     waist: form.get('waist'),
     hip: form.get('hip'),
     notes: form.get('notes')
-  });
+  };
+
+  let saved = saveEvolutionEntry(draft);
+  if (saved.code === 'duplicate') {
+    const existing = findEvolutionEntry(draft.date);
+    const question = existing
+      ? 'Já existe um registro nesta data. Deseja substituí-lo?'
+      : 'Deseja substituir o registro desta data?';
+    if (!window.confirm(question)) return;
+    saved = saveEvolutionEntry(draft, { replace: true });
+  }
+
+  if (!saved.ok) {
+    showToast(saved.error || 'Não foi possível salvar o registro.');
+    return;
+  }
+
   event.currentTarget.reset();
   $('evolutionDate').value = todayISO();
   renderEvolutionScreen();
-  showToast('Registro de evolução salvo.');
+  showToast(saved.replaced ? 'Registro atualizado.' : 'Registro de evolução salvo.');
 });
 
 $('refreshMenu').addEventListener('click', () => {
-  state.mealPlan = generateWeeklyPlan(state.profile, new Date(Date.now() + 7 * 86400000));
+  if (!isProfileComplete(state.profile)) {
+    go('assessment');
+    return;
+  }
+  if (state.menuBlockReason) {
+    showToast('O cardápio automático está bloqueado por segurança.');
+    return;
+  }
+  state.menuRotation += 1;
   state.menuDay = 0;
   renderMenuScreen();
   showToast('Nova rotação de refeições gerada.');
