@@ -5,7 +5,7 @@ import { classifySafety } from './safety.js';
 
 export const ENGINE_VERSION = 16;
 
-export function calculateNutrition(profile, startDate = new Date()) {
+export function calculateNutrition(profile, currentDate = new Date()) {
   const expenditureKcal = estimateEnergy(profile);
   const bmrKcal = estimateBMR(profile);
   const bmi = calculateBMI(profile.weight, profile.height);
@@ -14,12 +14,13 @@ export function calculateNutrition(profile, startDate = new Date()) {
     return { ok: false, error: 'Dados insuficientes para calcular o perfil nutricional.', version: ENGINE_VERSION };
   }
 
-  const plan = buildDeadlinePlan({
+  const plan = profile.goal === 'maintenance' ? null : buildDeadlinePlan({
     weight: profile.weight,
     targetWeight: profile.target,
     months: profile.deadline,
     expenditureKcal,
-    startDate
+    startDate: currentDate,
+    targetDate: profile._goalTargetDate || null
   });
 
   const request = plan
@@ -29,7 +30,8 @@ export function calculateNutrition(profile, startDate = new Date()) {
   const safety = classifySafety({
     profile,
     requestedKcal: request.requestedKcal,
-    expenditureKcal
+    expenditureKcal,
+    deadlineExpired: Boolean(plan?.expired)
   });
 
   const targetKcal = Number.isFinite(safety.boundedKcal) ? safety.boundedKcal : expenditureKcal;
