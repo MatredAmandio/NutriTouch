@@ -27,10 +27,22 @@ export function calendarDaysBetween(startDate, endDate) {
   if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return 0;
   const au = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
   const bu = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-  return Math.max(0, Math.round((bu - au) / MS_PER_DAY));
+  return Math.round((bu - au) / MS_PER_DAY);
 }
 
-export function buildDeadlinePlan({ weight, targetWeight, months, expenditureKcal, startDate = new Date() }) {
+export function targetDateForMonths(startDate, months) {
+  const count = Math.max(0, Math.trunc(Number(months) || 0));
+  return count ? addCalendarMonths(startDate, count) : null;
+}
+
+export function buildDeadlinePlan({
+  weight,
+  targetWeight,
+  months,
+  expenditureKcal,
+  startDate = new Date(),
+  targetDate = null
+}) {
   const current = Number(weight);
   const target = Number(targetWeight);
   const expenditure = Number(expenditureKcal);
@@ -39,19 +51,23 @@ export function buildDeadlinePlan({ weight, targetWeight, months, expenditureKca
   if (!durationMonths || ![current, target, expenditure].every(Number.isFinite)) return null;
   if (current <= 0 || target <= 0 || expenditure <= 0 || target === current) return null;
 
-  const targetDate = addCalendarMonths(startDate, durationMonths);
-  const days = Math.max(1, calendarDaysBetween(startDate, targetDate));
+  const resolvedTargetDate = targetDate ? new Date(`${String(targetDate).slice(0, 10)}T12:00:00`) : addCalendarMonths(startDate, durationMonths);
+  if (Number.isNaN(resolvedTargetDate.getTime())) return null;
+
+  const days = calendarDaysBetween(startDate, resolvedTargetDate);
   const deltaKg = target - current;
-  const energyDelta = (deltaKg * KCAL_PER_KG) / days;
+  const expired = days <= 0;
+  const energyDelta = expired ? 0 : (deltaKg * KCAL_PER_KG) / days;
 
   return {
     months: durationMonths,
-    days,
+    days: Math.max(0, days),
     target,
-    targetDate,
+    targetDate: resolvedTargetDate,
     deltaKg,
     energyDelta,
-    requestedKcal: expenditure + energyDelta
+    requestedKcal: expired ? expenditure : expenditure + energyDelta,
+    expired
   };
 }
 
