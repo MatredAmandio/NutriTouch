@@ -14,6 +14,7 @@ import {
 import { calculateNutrition } from './engine/nutri-engine.js';
 import { targetDateForMonths } from './engine/goals.js';
 import { generateWeeklyPlan } from './meals/generator.js';
+import { generateQuantifiedWeeklyPlan, canGenerateQuantifiedPlan } from './meals/quantified-generator.js';
 import { mealPlanEligibility } from './meals/substitutions.js';
 import { loadFoodDatabase } from './data/foods.js';
 import { $, showToast } from './ui/dom.js';
@@ -34,17 +35,9 @@ const state = {
   foods: { foods: [], validated: [], quarantined: [], status: 'loading' }
 };
 
-function todayISO() {
-  return localDateISO();
-}
-
-function dateAtNoon(iso = todayISO()) {
-  return new Date(`${iso}T12:00:00`);
-}
-
-function goalSignature(profile) {
-  return `${profile.goal}|${profile.target}|${profile.deadline}`;
-}
+function todayISO() { return localDateISO(); }
+function dateAtNoon(iso = todayISO()) { return new Date(`${iso}T12:00:00`); }
+function goalSignature(profile) { return `${profile.goal}|${profile.target}|${profile.deadline}`; }
 
 function ensureGoalSchedule() {
   const signature = goalSignature(state.profile);
@@ -54,12 +47,7 @@ function ensureGoalSchedule() {
 
   if (!needsDeadline) {
     if (state.profile._goalSignature !== signature || state.profile._goalTargetDate) {
-      state.profile = saveProfile({
-        ...state.profile,
-        _goalSignature: signature,
-        _goalStartDate: todayISO(),
-        _goalTargetDate: ''
-      });
+      state.profile = saveProfile({ ...state.profile, _goalSignature: signature, _goalStartDate: todayISO(), _goalTargetDate: '' });
     }
     return;
   }
@@ -104,7 +92,11 @@ function recalculate() {
   }
 
   state.menuBlockReason = '';
-  state.mealPlan = generateWeeklyPlan(state.profile, rotationDate());
+  const validatedFoods = state.foods.validated || [];
+  const quantified = canGenerateQuantifiedPlan(validatedFoods)
+    ? generateQuantifiedWeeklyPlan(state.profile, validatedFoods, state.result?.target?.kcal, rotationDate())
+    : null;
+  state.mealPlan = quantified || generateWeeklyPlan(state.profile, rotationDate());
 }
 
 function setActiveNav(screen) {
@@ -125,9 +117,7 @@ function go(screen) {
   setActiveNav(screen);
 
   const bottomNav = document.querySelector('.bottom-nav');
-  if (bottomNav) {
-    bottomNav.hidden = screen === 'welcome' || screen === 'assessment' || !isProfileComplete(state.profile);
-  }
+  if (bottomNav) bottomNav.hidden = screen === 'welcome' || screen === 'assessment' || !isProfileComplete(state.profile);
 
   if (screen === 'assessment') renderAssessmentScreen();
   if (screen === 'result') renderResultsScreen();
@@ -135,7 +125,6 @@ function go(screen) {
   if (screen === 'menu') renderMenuScreen();
   if (screen === 'foods') renderFoodsScreen();
   if (screen === 'evolution') renderEvolutionScreen();
-
   window.scrollTo(0, 0);
 }
 
@@ -154,10 +143,7 @@ function persistCurrentAssessmentFields() {
   return state.profile;
 }
 
-function renderResultsScreen() {
-  recalculate();
-  renderResult($('resultBox'), state.result);
-}
+function renderResultsScreen() { recalculate(); renderResult($('resultBox'), state.result); }
 
 function renderDashboardScreen() {
   recalculate();
@@ -210,42 +196,26 @@ function renderEvolutionScreen() {
 
 async function initFoods() {
   state.foods = await loadFoodDatabase();
+  recalculate();
   if ($('foods').classList.contains('is-active')) renderFoodsScreen();
+  if ($('menu').classList.contains('is-active')) renderMenuScreen();
 }
 
 document.addEventListener('click', event => {
   const nav = event.target.closest('[data-nav]');
   if (nav) {
     if ($('assessment').classList.contains('is-active')) persistCurrentAssessmentFields();
-    go(nav.dataset.nav);
-    return;
+    go(nav.dataset.nav); return;
   }
 
   const action = event.target.closest('[data-action]')?.dataset.action;
-  if (action === 'start-assessment' || action === 'edit-assessment') {
-    state.step = 1;
-    go('assessment');
-    return;
-  }
-  if (action === 'show-results') {
-    go('result');
-    return;
-  }
-  if (action === 'show-menu') {
-    go('menu');
-    return;
-  }
+  if (action === 'start-assessment' || action === 'edit-assessment') { state.step = 1; go('assessment'); return; }
+  if (action === 'show-results') { go('result'); return; }
+  if (action === 'show-menu') { go('menu'); return; }
   if (action === 'reset-profile') {
     if (window.confirm('Refazer a avaliação? O histórico de evolução será mantido.')) {
-      resetProfile();
-      state.profile = getProfile();
-      state.step = 1;
-      state.menuRotation = 0;
-      state.result = null;
-      state.mealPlan = null;
-      state.menuBlockReason = '';
-      go('welcome');
-      showToast('Avaliação reiniciada.');
+      resetProfile(); state.profile = getProfile(); state.step = 1; state.menuRotation = 0;
+      state.result = null; state.mealPlan = null; state.menuBlockReason = ''; go('welcome'); showToast('Avaliação reiniciada.');
     }
     return;
   }
@@ -255,62 +225,31 @@ document.addEventListener('click', event => {
     state.profile = collectAssessment($('assessmentBox'), state.profile);
     state.profile[choice.dataset.choiceKey] = choice.dataset.choiceValue;
     if (choice.dataset.choiceKey === 'goal') {
-      state.profile._goalSignature = '';
-      state.profile._goalStartDate = '';
-      state.profile._goalTargetDate = '';
-      if (choice.dataset.choiceValue === 'maintenance') {
-        state.profile.target = '';
-        state.profile.deadline = '';
-      }
+      state.profile._goalSignature = ''; state.profile._goalStartDate = ''; state.profile._goalTargetDate = '';
+      if (choice.dataset.choiceValue === 'maintenance') { state.profile.target = ''; state.profile.deadline = ''; }
     }
-    state.profile = saveProfile(state.profile);
-    renderAssessmentScreen();
-    return;
+    state.profile = saveProfile(state.profile); renderAssessmentScreen(); return;
   }
 
   const day = event.target.closest('[data-menu-day]');
-  if (day) {
-    state.menuDay = Math.max(0, Math.min(6, Number(day.dataset.menuDay) || 0));
-    renderMenuScreen();
-    return;
-  }
+  if (day) { state.menuDay = Math.max(0, Math.min(6, Number(day.dataset.menuDay) || 0)); renderMenuScreen(); return; }
 
   const remove = event.target.closest('[data-delete-evolution]');
-  if (remove) {
-    if (window.confirm('Excluir este registro de evolução?')) {
-      deleteEvolutionEntry(remove.dataset.deleteEvolution);
-      renderEvolutionScreen();
-      showToast('Registro excluído.');
-    }
+  if (remove && window.confirm('Excluir este registro de evolução?')) {
+    deleteEvolutionEntry(remove.dataset.deleteEvolution); renderEvolutionScreen(); showToast('Registro excluído.');
   }
 });
 
 $('assessmentNext').addEventListener('click', () => {
   persistCurrentAssessmentFields();
   const error = validateAssessmentStep(state.step, state.profile);
-  if (error) {
-    window.alert(error);
-    return;
-  }
-
-  if (state.step < 5) {
-    state.step += 1;
-    renderAssessmentScreen();
-    window.scrollTo(0, 0);
-  } else {
-    state.profile = completeAssessment(state.profile);
-    state.menuRotation = 0;
-    state.menuDay = 0;
-    recalculate();
-    go('result');
-  }
+  if (error) { window.alert(error); return; }
+  if (state.step < 5) { state.step += 1; renderAssessmentScreen(); window.scrollTo(0, 0); }
+  else { state.profile = completeAssessment(state.profile); state.menuRotation = 0; state.menuDay = 0; recalculate(); go('result'); }
 });
 
 $('assessmentBack').addEventListener('click', () => {
-  persistCurrentAssessmentFields();
-  if (state.step > 1) state.step -= 1;
-  renderAssessmentScreen();
-  window.scrollTo(0, 0);
+  persistCurrentAssessmentFields(); if (state.step > 1) state.step -= 1; renderAssessmentScreen(); window.scrollTo(0, 0);
 });
 
 $('foodSearch').addEventListener('input', renderFoodsScreen);
@@ -318,65 +257,30 @@ $('foodSearch').addEventListener('input', renderFoodsScreen);
 $('evolutionForm').addEventListener('submit', event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
-  const draft = {
-    date: form.get('date'),
-    weight: form.get('weight'),
-    waist: form.get('waist'),
-    hip: form.get('hip'),
-    notes: form.get('notes')
-  };
-
+  const draft = { date: form.get('date'), weight: form.get('weight'), waist: form.get('waist'), hip: form.get('hip'), notes: form.get('notes') };
   let saved = saveEvolutionEntry(draft);
   if (saved.code === 'duplicate') {
     const existing = findEvolutionEntry(draft.date);
-    const question = existing
-      ? 'Já existe um registro nesta data. Deseja substituí-lo?'
-      : 'Deseja substituir o registro desta data?';
-    if (!window.confirm(question)) return;
+    if (!window.confirm(existing ? 'Já existe um registro nesta data. Deseja substituí-lo?' : 'Deseja substituir o registro desta data?')) return;
     saved = saveEvolutionEntry(draft, { replace: true });
   }
-
-  if (!saved.ok) {
-    showToast(saved.error || 'Não foi possível salvar o registro.');
-    return;
-  }
-
-  event.currentTarget.reset();
-  $('evolutionDate').value = todayISO();
-  renderEvolutionScreen();
+  if (!saved.ok) { showToast(saved.error || 'Não foi possível salvar o registro.'); return; }
+  event.currentTarget.reset(); $('evolutionDate').value = todayISO(); renderEvolutionScreen();
   showToast(saved.replaced ? 'Registro atualizado.' : 'Registro de evolução salvo.');
 });
 
 $('refreshMenu').addEventListener('click', () => {
-  if (!isProfileComplete(state.profile)) {
-    go('assessment');
-    return;
-  }
-  if (state.menuBlockReason) {
-    showToast('O cardápio automático está bloqueado por segurança.');
-    return;
-  }
-  state.menuRotation += 1;
-  state.menuDay = 0;
-  renderMenuScreen();
-  showToast('Nova rotação de refeições gerada.');
+  if (!isProfileComplete(state.profile)) { go('assessment'); return; }
+  if (state.menuBlockReason) { showToast('O cardápio automático está bloqueado por segurança.'); return; }
+  state.menuRotation += 1; state.menuDay = 0; renderMenuScreen(); showToast('Nova rotação de refeições gerada.');
 });
 
 $('appVersion').textContent = `V${APP_VERSION}`;
-
-recalculate();
-renderAssessmentScreen();
-initFoods();
+recalculate(); renderAssessmentScreen(); initFoods();
 
 const requestedScreen = new URLSearchParams(window.location.search).get('screen');
 const allowedScreens = new Set(['dashboard', 'menu', 'foods', 'evolution', 'result', 'assessment']);
-const initialScreen = allowedScreens.has(requestedScreen)
-  ? requestedScreen
-  : (isProfileComplete(state.profile) ? 'dashboard' : 'welcome');
+const initialScreen = allowedScreens.has(requestedScreen) ? requestedScreen : (isProfileComplete(state.profile) ? 'dashboard' : 'welcome');
 go(initialScreen);
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
