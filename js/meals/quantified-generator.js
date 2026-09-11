@@ -2,6 +2,8 @@ import { DAYS } from './generator.js';
 import { QUANTIFIED_RECIPES } from './quantified-recipes.js';
 import { buildFoodIndex, mealShares, scaleRecipeToTarget, addNutrients } from './nutrition.js';
 
+const STYLE_PREFERENCES = new Set(['brasileira', 'mediterranea', 'fitness', 'vegetariana', 'vegana']);
+
 function hashSeed(text) {
   let h = 2166136261;
   for (let i = 0; i < text.length; i += 1) {
@@ -60,6 +62,12 @@ function recipeCompatible(recipe, profile, foodIndex) {
   return !terms.some(term => searchable.includes(term));
 }
 
+function stylePool(recipes, preference) {
+  if (!STYLE_PREFERENCES.has(preference)) return recipes;
+  const preferred = recipes.filter(recipe => (recipe.styles || []).includes(preference));
+  return preferred.length ? preferred : recipes;
+}
+
 function chooseRecipe(pool, dayIndex, slotIndex, seed, used) {
   if (!pool.length) return null;
   const start = (seed + dayIndex * 11 + slotIndex * 7) % pool.length;
@@ -82,9 +90,14 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
   const roles = trainingRoles(count, profile.trainingTime);
   const foodIndex = buildFoodIndex(foods);
   const seed = hashSeed(`${profile.preferences}|${profile.goal}|${weekKey(date)}`);
-  const pools = Object.fromEntries(['breakfast','lunch','snack','dinner'].map(kind => [kind,
-    QUANTIFIED_RECIPES.filter(recipe => recipe.kind === kind && recipe.ingredients.every(item => foodIndex.has(item.foodId)) && recipeCompatible(recipe, profile, foodIndex))
-  ]));
+  const pools = Object.fromEntries(['breakfast','lunch','snack','dinner'].map(kind => {
+    const compatible = QUANTIFIED_RECIPES.filter(recipe =>
+      recipe.kind === kind
+      && recipe.ingredients.every(item => foodIndex.has(item.foodId))
+      && recipeCompatible(recipe, profile, foodIndex)
+    );
+    return [kind, stylePool(compatible, profile.preferences || 'brasileira')];
+  }));
 
   if (slots.some(([,kind]) => !pools[kind]?.length)) return null;
 
