@@ -49,6 +49,41 @@ function mealKinds(count) {
   return ['breakfast', 'snack', 'lunch', 'snack', 'dinner', 'snack'];
 }
 
+function trainingRoles(count, trainingTime) {
+  const roles = Array.from({ length: count }, () => '');
+  if (!trainingTime) return roles;
+
+  if (trainingTime === 'morning') {
+    roles[0] = 'Pré-treino';
+    if (count > 1) roles[1] = 'Pós-treino';
+  }
+
+  if (trainingTime === 'afternoon') {
+    const pre = count >= 4 ? Math.max(1, count - 3) : 1;
+    const post = Math.min(count - 1, pre + 1);
+    roles[pre] = 'Pré-treino';
+    roles[post] = 'Pós-treino';
+  }
+
+  if (trainingTime === 'evening') {
+    const post = Math.max(0, count - 1);
+    const pre = Math.max(0, post - 1);
+    roles[pre] = 'Pré-treino';
+    roles[post] = 'Pós-treino';
+  }
+
+  return roles;
+}
+
+function pickDistinct(rotation, preferredIndex, usedIds) {
+  if (!rotation.length) return null;
+  for (let offset = 0; offset < rotation.length; offset += 1) {
+    const candidate = rotation[(preferredIndex + offset) % rotation.length];
+    if (!usedIds.has(candidate.id)) return candidate;
+  }
+  return rotation[preferredIndex % rotation.length];
+}
+
 export function generateWeeklyPlan(profile, date = new Date()) {
   const count = Math.max(3, Math.min(6, Number(profile.meals) || 4));
   const pool = poolForPreference(profile.preferences);
@@ -63,19 +98,32 @@ export function generateWeeklyPlan(profile, date = new Date()) {
       components: ['Revise alergias, intolerâncias e alimentos evitados antes de escolher uma opção.'],
       flags: ['blocked']
     }];
-    rotations[kind] = rotate(safePool, 14, seedBase + (index + 1) * 9973);
+    rotations[kind] = rotate(safePool, 28, seedBase + (index + 1) * 9973);
   }
 
   const labels = mealLabels(count);
   const kinds = mealKinds(count);
+  const roles = trainingRoles(count, profile.trainingTime);
 
-  return DAYS.map((dayName, dayIndex) => ({
-    day: dayName,
-    meals: kinds.map((kind, mealIndex) => ({
-      label: labels[mealIndex],
-      kind,
-      meal: rotations[kind][dayIndex + mealIndex]
-    })),
-    nutrientStatus: 'awaiting-validated-food-links'
-  }));
+  return DAYS.map((dayName, dayIndex) => {
+    const used = new Map();
+    const meals = kinds.map((kind, mealIndex) => {
+      if (!used.has(kind)) used.set(kind, new Set());
+      const usedIds = used.get(kind);
+      const meal = pickDistinct(rotations[kind], dayIndex * count + mealIndex, usedIds);
+      usedIds.add(meal.id);
+      return {
+        label: labels[mealIndex],
+        kind,
+        role: roles[mealIndex],
+        meal
+      };
+    });
+
+    return {
+      day: dayName,
+      meals,
+      nutrientStatus: 'awaiting-validated-food-links'
+    };
+  });
 }
