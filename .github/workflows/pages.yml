@@ -34,6 +34,13 @@ jobs:
           node --check js/app.js
           node --check sw.js
           npm test
+      - name: Functional screen audit in headless browser
+        run: |
+          python3 -m http.server 4173 >/tmp/nutritouch-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          node tests/v16-ui-audit.mjs
 
   deploy:
     if: github.event_name != 'pull_request'
