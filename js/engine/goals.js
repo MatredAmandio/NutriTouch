@@ -1,31 +1,22 @@
-/* NutriTouch V16 — goal planning.
- * Pure functions: no DOM/localStorage dependencies.
- */
+/* NutriTouch V16 — metas e prazo em calendário real. */
 
 export const KCAL_PER_KG = 7700;
-
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function lastDayOfMonth(year, monthIndex) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-/**
- * Add calendar months while clamping month-end dates.
- * Example: Jan 31 + 1 month => Feb 28/29, not March.
- */
 export function addCalendarMonths(date, months) {
   const source = new Date(date);
   if (Number.isNaN(source.getTime())) throw new Error('Invalid start date');
 
   const count = Math.max(0, Math.trunc(Number(months) || 0));
-  const year = source.getFullYear();
-  const month = source.getMonth();
-  const day = source.getDate();
-  const targetMonthIndex = month + count;
-  const targetYear = year + Math.floor(targetMonthIndex / 12);
-  const targetMonth = ((targetMonthIndex % 12) + 12) % 12;
-  const targetDay = Math.min(day, lastDayOfMonth(targetYear, targetMonth));
+  const sourceDay = source.getDate();
+  const absoluteMonth = source.getMonth() + count;
+  const targetYear = source.getFullYear() + Math.floor(absoluteMonth / 12);
+  const targetMonth = ((absoluteMonth % 12) + 12) % 12;
+  const targetDay = Math.min(sourceDay, lastDayOfMonth(targetYear, targetMonth));
 
   return new Date(targetYear, targetMonth, targetDay, 12, 0, 0, 0);
 }
@@ -39,19 +30,14 @@ export function calendarDaysBetween(startDate, endDate) {
   return Math.max(0, Math.round((bu - au) / MS_PER_DAY));
 }
 
-/**
- * Converts the simple UI input (number of months) into a real calendar date.
- * requestedKcal is an estimate used by the safety layer; it is not a prescription.
- */
 export function buildDeadlinePlan({ weight, targetWeight, months, expenditureKcal, startDate = new Date() }) {
   const current = Number(weight);
   const target = Number(targetWeight);
   const expenditure = Number(expenditureKcal);
-  const durationMonths = Math.max(1, Math.trunc(Number(months) || 1));
+  const durationMonths = Math.max(0, Math.trunc(Number(months) || 0));
 
-  if (![current, target, expenditure].every(Number.isFinite) || current <= 0 || target <= 0 || expenditure <= 0) {
-    return null;
-  }
+  if (!durationMonths || ![current, target, expenditure].every(Number.isFinite)) return null;
+  if (current <= 0 || target <= 0 || expenditure <= 0 || target === current) return null;
 
   const targetDate = addCalendarMonths(startDate, durationMonths);
   const days = Math.max(1, calendarDaysBetween(startDate, targetDate));
@@ -66,5 +52,23 @@ export function buildDeadlinePlan({ weight, targetWeight, months, expenditureKca
     deltaKg,
     energyDelta,
     requestedKcal: expenditure + energyDelta
+  };
+}
+
+export function defaultGoalRequest(goal, expenditureKcal) {
+  const expenditure = Number(expenditureKcal);
+  if (!Number.isFinite(expenditure) || expenditure <= 0) return null;
+
+  const factor = {
+    loss: 0.90,
+    recomp: 0.97,
+    gain: 1.08,
+    maintenance: 1
+  }[goal] ?? 1;
+
+  return {
+    requestedKcal: expenditure * factor,
+    requestedAdjustmentKcal: expenditure * (factor - 1),
+    factor
   };
 }
