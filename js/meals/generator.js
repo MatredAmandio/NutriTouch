@@ -1,4 +1,4 @@
-import { poolForPreference } from './templates.js';
+import { TEMPLATE_POOLS } from './templates.js';
 import { compatiblePool } from './substitutions.js';
 
 export const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -86,7 +86,7 @@ function pickDistinct(rotation, preferredIndex, usedIds) {
 
 export function generateWeeklyPlan(profile, date = new Date()) {
   const count = Math.max(3, Math.min(6, Number(profile.meals) || 4));
-  const pool = poolForPreference(profile.preferences);
+  const pool = TEMPLATE_POOLS[profile.preferences] || TEMPLATE_POOLS.brasileira;
   const seedBase = hashSeed(`${profile.preferences}|${profile.goal}|${currentWeekKey(date)}`);
   const rotations = {};
 
