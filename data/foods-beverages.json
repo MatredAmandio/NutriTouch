@@ -1,0 +1,65 @@
+{
+  "version": "3.5.0",
+  "status": "validated_beverage_expansion",
+  "basis": "100 g edible portion",
+  "source_citation": "TBCA versão 7.3 (USP/FoRC, 2025).",
+  "safety_note": "Coffee and tea records are calculation-eligible because they use the accepted TBCA source, traceable record ids and complete numeric energy, protein, carbohydrate and fat values. Sugar, milk, gluten-free status and cross-contact are not inferred beyond the exact preparation described by the source.",
+  "foods": [
+    {
+      "id": "TBCA-BRC0007H",
+      "name": "Café, infusão 10%, sem açúcar",
+      "aliases": ["café", "cafe", "café coado", "cafe coado", "café sem açúcar"],
+      "group": "bebidas",
+      "food_state": "ready_to_drink",
+      "processing_level": "minimally_processed",
+      "nutrition": {"basis_g":100,"energy_kcal":10,"protein_g":0.67,"carbohydrate_g":1.68,"fiber_g":0.0,"fat_g":0.07,"sodium_mg":1.03},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0007H","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"unknown_requires_cross_contact_check","lactose_free":"allowed_by_recipe_description"},
+      "allergens": [],
+      "household_measures": [{"label":"1 xícara de chá (200 mL)","grams":200}],
+      "tags": ["beverage","coffee","unsweetened","brazilian"]
+    },
+    {
+      "id": "TBCA-BRC0013H",
+      "name": "Chá preto, infusão 5%, sem açúcar",
+      "aliases": ["chá preto", "cha preto", "chá sem açúcar", "black tea"],
+      "group": "bebidas",
+      "food_state": "ready_to_drink",
+      "processing_level": "minimally_processed",
+      "nutrition": {"basis_g":100,"energy_kcal":2,"protein_g":0.0,"carbohydrate_g":0.63,"fiber_g":0.0,"fat_g":0.0,"sodium_mg":null},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0013H","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"unknown_requires_cross_contact_check","lactose_free":"allowed_by_recipe_description"},
+      "allergens": [],
+      "household_measures": [{"label":"1 xícara de chá (200 mL)","grams":200}],
+      "tags": ["beverage","tea","black-tea","unsweetened","brazilian"]
+    },
+    {
+      "id": "TBCA-BRC0011H",
+      "name": "Chá mate, infusão 5%, sem açúcar",
+      "aliases": ["chá mate", "cha mate", "mate", "chá-mate"],
+      "group": "bebidas",
+      "food_state": "ready_to_drink",
+      "processing_level": "minimally_processed",
+      "nutrition": {"basis_g":100,"energy_kcal":3,"protein_g":0.0,"carbohydrate_g":0.64,"fiber_g":0.0,"fat_g":0.05,"sodium_mg":null},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0011H","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"unknown_requires_cross_contact_check","lactose_free":"allowed_by_recipe_description"},
+      "allergens": [],
+      "household_measures": [{"label":"1 xícara de chá (200 mL)","grams":200}],
+      "tags": ["beverage","tea","mate","unsweetened","brazilian"]
+    },
+    {
+      "id": "TBCA-BRC0015H",
+      "name": "Chá de ervas, infusão sem açúcar",
+      "aliases": ["chá de ervas", "cha de ervas", "infusão de ervas", "infusao de ervas"],
+      "group": "bebidas",
+      "food_state": "ready_to_drink",
+      "processing_level": "minimally_processed",
+      "nutrition": {"basis_g":100,"energy_kcal":2,"protein_g":0.0,"carbohydrate_g":0.56,"fiber_g":0.0,"fat_g":0.02,"sodium_mg":0.21},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0015H","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"allowed","vegan":"allowed","gluten_free":"unknown_requires_cross_contact_check","lactose_free":"allowed_by_recipe_description"},
+      "allergens": [],
+      "household_measures": [{"label":"1 xícara de chá (200 mL)","grams":200}],
+      "tags": ["beverage","tea","herbal-tea","unsweetened","brazilian"]
+    }
+  ]
+}
