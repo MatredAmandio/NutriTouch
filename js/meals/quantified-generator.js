@@ -3,6 +3,7 @@ import { QUANTIFIED_RECIPES } from './quantified-library.js';
 import { buildFoodIndex, mealShares, scaleRecipeToTarget, addNutrients } from './nutrition.js';
 
 const STYLE_PREFERENCES = new Set(['brasileira', 'mediterranea', 'fitness', 'vegetariana', 'vegana']);
+const BRAZILIAN_BREAD_BREAKFAST_DAYS = new Set([0, 2, 5]);
 
 function hashSeed(text) {
   let h = 2166136261;
@@ -69,6 +70,21 @@ function stylePool(recipes, preference) {
   return preferred.length ? preferred : recipes;
 }
 
+function recipeContainsBread(recipe, foodIndex) {
+  return recipe.ingredients.some(item => {
+    const food = foodIndex.get(item.foodId);
+    const text = `${food?.name || ''} ${(food?.aliases || []).join(' ')}`.toLowerCase();
+    return /\bpão\b|\bpao\b|\btorrada\b/.test(text);
+  });
+}
+
+function poolForSlot(pool, kind, dayIndex, profile, foodIndex) {
+  if (kind !== 'breakfast' || (profile.preferences || 'brasileira') !== 'brasileira') return pool;
+  if (!BRAZILIAN_BREAD_BREAKFAST_DAYS.has(dayIndex)) return pool;
+  const breadPool = pool.filter(recipe => recipeContainsBread(recipe, foodIndex));
+  return breadPool.length ? breadPool : pool;
+}
+
 function chooseRecipe(pool, dayIndex, slotIndex, seed, used) {
   if (!pool.length) return null;
   const start = hashSeed(`${seed}|${dayIndex}|${slotIndex}`) % pool.length;
@@ -106,7 +122,8 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
     const usedByKind = new Map();
     const meals = slots.map(([label, kind], slotIndex) => {
       if (!usedByKind.has(kind)) usedByKind.set(kind, new Set());
-      const recipe = chooseRecipe(pools[kind], dayIndex, slotIndex, seed, usedByKind.get(kind));
+      const slotPool = poolForSlot(pools[kind], kind, dayIndex, profile, foodIndex);
+      const recipe = chooseRecipe(slotPool, dayIndex, slotIndex, seed, usedByKind.get(kind));
       usedByKind.get(kind).add(recipe.id);
       const target = Number(targetKcal) * shares[slotIndex];
       const quantified = scaleRecipeToTarget(recipe, target, foodIndex);
