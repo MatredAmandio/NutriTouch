@@ -9,7 +9,8 @@ const core = JSON.parse(await readFile(new URL('../data/foods.json', import.meta
 const taco = JSON.parse(await readFile(new URL('../data/foods-taco.json', import.meta.url), 'utf8'));
 const expansion = JSON.parse(await readFile(new URL('../data/foods-3.3.json', import.meta.url), 'utf8'));
 const cheeses = JSON.parse(await readFile(new URL('../data/foods-cheese.json', import.meta.url), 'utf8'));
-const foods = [...core.foods, ...taco.foods, ...expansion.foods, ...cheeses.foods];
+const beverages = JSON.parse(await readFile(new URL('../data/foods-beverages.json', import.meta.url), 'utf8'));
+const foods = [...core.foods, ...taco.foods, ...expansion.foods, ...cheeses.foods, ...beverages.foods];
 
 assert.equal(core.version, '3.1.0');
 assert.equal(core.foods.length, 27, 'base 3.1.0 should contain exactly 27 validated foods');
@@ -19,7 +20,9 @@ assert.equal(expansion.version, '3.3.0');
 assert.equal(expansion.foods.length, 15, 'priority expansion should contain exactly 15 validated foods');
 assert.equal(cheeses.version, '3.4.0');
 assert.equal(cheeses.foods.length, 6, 'cheese expansion should contain exactly 6 new validated cheeses');
-assert.equal(foods.length, 58, 'combined validated food base should contain 58 foods');
+assert.equal(beverages.version, '3.5.0');
+assert.equal(beverages.foods.length, 4, 'beverage expansion should contain exactly 4 validated coffee and tea records');
+assert.equal(foods.length, 62, 'combined validated food base should contain 62 foods');
 assert.equal(new Set(foods.map(food => food.id)).size, foods.length, 'food ids must remain unique');
 assert.ok(foods.every(isValidatedFood), 'every combined food must pass the accepted-source validation gate');
 assert.ok(foods.every(food => food.sources?.some(source => source.record_id && source.status === 'validated')));
@@ -115,6 +118,19 @@ assert.ok(cheeses.foods.every(food => food.diet_compatibility.vegan === 'not_all
 assert.ok(cheeses.foods.every(food => food.diet_compatibility.vegetarian === 'unknown_requires_ingredient_check'), 'rennet suitability must not be assumed from macros');
 assert.ok(cheeses.foods.every(food => food.diet_compatibility.lactose_free === 'unknown_requires_ingredient_check'), 'lactose-free status must not be inferred from cheese type');
 
+const coffee = beverages.foods.find(food => food.id === 'TBCA-BRC0007H');
+assert.deepEqual(
+  [coffee.nutrition.energy_kcal, coffee.nutrition.protein_g, coffee.nutrition.carbohydrate_g, coffee.nutrition.fat_g, coffee.nutrition.sodium_mg],
+  [10, 0.67, 1.68, 0.07, 1.03]
+);
+const blackTea = beverages.foods.find(food => food.id === 'TBCA-BRC0013H');
+assert.deepEqual(
+  [blackTea.nutrition.energy_kcal, blackTea.nutrition.protein_g, blackTea.nutrition.carbohydrate_g, blackTea.nutrition.fat_g],
+  [2, 0, 0.63, 0]
+);
+assert.ok(beverages.foods.every(food => food.sources[0].source_id === 'TBCA_USP_FORC'));
+assert.ok(beverages.foods.every(food => food.sources[0].version === '7.3' && food.sources[0].year === 2025));
+
 const rawCheeseBread = taco.foods.find(food => food.id === 'TACO-2011-141');
 assert.equal(rawCheeseBread.food_state, 'raw');
 assert.ok(!QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.some(item => item.foodId === rawCheeseBread.id)), 'raw cheese bread must not be offered in quantified meals');
@@ -124,11 +140,13 @@ assert.equal(glutenBread.diet_compatibility.gluten_free, 'not_allowed');
 assert.ok(glutenBread.allergens.includes('gluten'));
 
 const index = buildFoodIndex(foods);
-assert.ok(QUANTIFIED_RECIPES.length >= 95, 'expanded quantified library should contain at least 95 recipes');
+assert.ok(QUANTIFIED_RECIPES.length >= 101, 'expanded quantified library should contain at least 101 recipes');
 assert.equal(new Set(QUANTIFIED_RECIPES.map(recipe => recipe.id)).size, QUANTIFIED_RECIPES.length, 'quantified recipe ids must be unique');
 assert.ok(QUANTIFIED_RECIPES.every(recipe => recipe.ingredients.every(item => index.has(item.foodId))), 'every quantified recipe ingredient must exist in the validated food base');
 assert.ok(QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.some(item => item.foodId.startsWith('TBCA-'))), 'quantified library should use validated TBCA foods');
 assert.ok(QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.some(item => item.foodId === 'USDA-173806')), 'quantified library should use validated unsalted peanuts');
+assert.ok(QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.some(item => item.foodId === 'TBCA-BRC0007H')), 'quantified library should use validated coffee');
+assert.ok(QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.some(item => ['TBCA-BRC0011H','TBCA-BRC0013H','TBCA-BRC0015H'].includes(item.foodId))), 'quantified library should use validated tea');
 
 const cheeseIds = new Set(cheeses.foods.map(food => food.id));
 for (const cheeseId of cheeseIds) {
@@ -181,6 +199,8 @@ assert.ok(week.every(day => day.meals.every(meal => meal.meal.components.every(c
 const brazilianMeals = week.flatMap(day => day.meals);
 assert.ok(brazilianMeals.every(meal => !/tofu/i.test(meal.meal.title)), 'Brazilian style should not be dominated by tofu recipes');
 assert.ok(QUANTIFIED_RECIPES.filter(recipe => recipe.styles?.includes('brasileira')).some(recipe => recipe.ingredients.some(item => cheeseIds.has(item.foodId))), 'Brazilian quantified library should contain validated cheese options');
+const brazilianBreakfasts = brazilianMeals.filter(meal => meal.kind === 'breakfast');
+assert.ok(brazilianBreakfasts.filter(meal => /pão|torrada/i.test(meal.meal.title)).length >= 3, 'Brazilian weekly plan should include bread at breakfast at least three days when compatible');
 const brazilianMainTitles = brazilianMeals.filter(meal => ['lunch','dinner'].includes(meal.kind)).map(meal => meal.meal.title).join(' | ');
 const proteinFamilies = [
   /frango/i.test(brazilianMainTitles) && 'chicken',
