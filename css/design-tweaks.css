@@ -1,0 +1,22 @@
+/* Visual-only refinements requested for NutriTouch. */
+.welcome-kicker::before,
+.motivation-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Keep the existing cards and spacing while removing heart glyphs. */
+.welcome-benefit:nth-child(3) > b,
+.quick-card:nth-child(3) > b {
+  visibility: hidden !important;
+}
+
+/* Dashboard: remove only the requested motivational quote card. */
+#dashboard .motivation-card {
+  display: none !important;
+}
+
+/* Menu: remove only the requested introductory sentence below the title. */
+#menu > p:first-of-type {
+  display: none !important;
+}
