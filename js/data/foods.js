@@ -49,17 +49,18 @@ async function fetchOptionalDataset(path) {
 export async function loadFoodDatabase() {
   try {
     const core = await fetchDataset('./data/foods.json');
-    const [taco, expansion, cheeses] = await Promise.all([
+    const [taco, expansion, cheeses, beverages] = await Promise.all([
       fetchOptionalDataset('./data/foods-taco.json'),
       fetchOptionalDataset('./data/foods-3.3.json'),
-      fetchOptionalDataset('./data/foods-cheese.json')
+      fetchOptionalDataset('./data/foods-cheese.json'),
+      fetchOptionalDataset('./data/foods-beverages.json')
     ]);
 
-    const datasets = [core, taco, expansion, cheeses].filter(Boolean);
+    const datasets = [core, taco, expansion, cheeses, beverages].filter(Boolean);
     const foods = datasets.flatMap(data => Array.isArray(data.foods) ? data.foods : []);
     const validated = foods.filter(isValidatedFood);
     const quarantined = foods.filter(food => !isValidatedFood(food));
-    const version = cheeses?.version || expansion?.version || taco?.version || core.version || 'unknown';
+    const version = beverages?.version || cheeses?.version || expansion?.version || taco?.version || core.version || 'unknown';
     const status = datasets.length > 1 ? 'validated_multi_source_core' : (core.status || 'unknown');
     const notes = datasets.map(data => data.safety_note).filter(Boolean);
 
