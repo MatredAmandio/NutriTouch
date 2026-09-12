@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-9';
+const CACHE = 'nutritouch-v16-10';
 const CORE = [
   './',
   './index.html',
@@ -25,6 +25,7 @@ const CORE = [
   './js/meals/quantified-recipes.js',
   './js/meals/quantified-recipes-3.3.js',
   './js/meals/quantified-recipes-cheese.js',
+  './js/meals/quantified-recipes-beverages.js',
   './js/meals/quantified-library.js',
   './js/meals/quantified-generator.js',
   './js/data/foods.js',
@@ -37,7 +38,8 @@ const CORE = [
   './data/foods.json',
   './data/foods-taco.json',
   './data/foods-3.3.json',
-  './data/foods-cheese.json'
+  './data/foods-cheese.json',
+  './data/foods-beverages.json'
 ];
 
 self.addEventListener('install', event => {
