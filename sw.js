@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-6';
+const CACHE = 'nutritouch-v16-7';
 const CORE = [
   './',
   './index.html',
@@ -23,6 +23,7 @@ const CORE = [
   './js/meals/nutrition.js',
   './js/meals/quantified-recipes.js',
   './js/meals/quantified-recipes-3.3.js',
+  './js/meals/quantified-recipes-cheese.js',
   './js/meals/quantified-library.js',
   './js/meals/quantified-generator.js',
   './js/data/foods.js',
@@ -34,7 +35,8 @@ const CORE = [
   './js/ui/evolution.js',
   './data/foods.json',
   './data/foods-taco.json',
-  './data/foods-3.3.json'
+  './data/foods-3.3.json',
+  './data/foods-cheese.json'
 ];
 
 self.addEventListener('install', event => {
@@ -72,7 +74,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.pathname.endsWith('/data/foods.json') || url.pathname.endsWith('/data/foods-taco.json') || url.pathname.endsWith('/data/foods-3.3.json')) {
+  if (
+    url.pathname.endsWith('/data/foods.json')
+    || url.pathname.endsWith('/data/foods-taco.json')
+    || url.pathname.endsWith('/data/foods-3.3.json')
+    || url.pathname.endsWith('/data/foods-cheese.json')
+  ) {
     event.respondWith(
       fetch(event.request)
         .then(response => cacheSuccessful(event.request, response))
