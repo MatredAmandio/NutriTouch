@@ -283,4 +283,18 @@ const allowedScreens = new Set(['dashboard', 'menu', 'foods', 'evolution', 'resu
 const initialScreen = allowedScreens.has(requestedScreen) ? requestedScreen : (isProfileComplete(state.profile) ? 'dashboard' : 'welcome');
 go(initialScreen);
 
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+      await registration.update();
+    } catch (_) {}
+  });
+}
