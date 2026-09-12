@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-8';
+const CACHE = 'nutritouch-v16-9';
 const CORE = [
   './',
   './index.html',
@@ -61,38 +61,24 @@ async function cacheSuccessful(request, response) {
   return response;
 }
 
+async function networkFirst(request, fallback = request) {
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    return cacheSuccessful(request, response);
+  } catch (_) {
+    return caches.match(fallback);
+  }
+}
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => cacheSuccessful('./index.html', response))
-        .catch(() => caches.match('./index.html'))
-    );
+    event.respondWith(networkFirst(event.request, './index.html'));
     return;
   }
 
-  if (
-    url.pathname.endsWith('/data/foods.json')
-    || url.pathname.endsWith('/data/foods-taco.json')
-    || url.pathname.endsWith('/data/foods-3.3.json')
-    || url.pathname.endsWith('/data/foods-cheese.json')
-  ) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => cacheSuccessful(event.request, response))
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      const network = fetch(event.request).then(response => cacheSuccessful(event.request, response));
-      return cached || network;
-    })
-  );
+  event.respondWith(networkFirst(event.request));
 });
