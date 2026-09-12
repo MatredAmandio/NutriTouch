@@ -1,0 +1,87 @@
+{
+  "version": "3.4.0",
+  "status": "validated_cheese_expansion",
+  "basis": "100 g edible portion",
+  "source_citation": "TBCA versão 7.3 (USP/FoRC, 2025).",
+  "safety_note": "Cheese records are calculation-eligible only because they use the already accepted TBCA source with traceable record ids and complete numeric energy, protein, carbohydrate and fat values. Milk is treated as an allergen. Lactose, vegetarian suitability, gluten absence and cross-contact are not inferred from the cheese name or macronutrients; quantified recipes therefore remain conservative for those restrictions.",
+  "foods": [
+    {
+      "id": "TBCA-BRC0059G",
+      "name": "Queijo muçarela de leite de vaca",
+      "aliases": ["queijo muçarela", "muçarela", "mussarela", "mozarela"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":320,"protein_g":23.8,"carbohydrate_g":1.97,"fiber_g":0.0,"fat_g":24.1,"sodium_mg":506},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0059G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 fatia média","grams":20}],
+      "tags": ["dairy","cheese","milk","brazilian","restriction_profile_partially_unverified"]
+    },
+    {
+      "id": "TBCA-BRC0064G",
+      "name": "Queijo prato",
+      "aliases": ["queijo prato", "prato"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":346,"protein_g":24.2,"carbohydrate_g":0.20,"fat_g":27.6,"sodium_mg":550},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0064G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 fatia média","grams":20}],
+      "tags": ["dairy","cheese","milk","brazilian","restriction_profile_partially_unverified"]
+    },
+    {
+      "id": "TBCA-BRC0060G",
+      "name": "Queijo Minas tipo parmesão",
+      "aliases": ["queijo parmesão", "parmesão", "parmesao", "minas tipo parmesão"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":448,"protein_g":31.9,"carbohydrate_g":2.48,"fiber_g":2.38,"fat_g":35.0,"sodium_mg":1662},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0060G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 colher de sopa cheia","grams":15}],
+      "tags": ["dairy","cheese","milk","brazilian","restriction_profile_partially_unverified"]
+    },
+    {
+      "id": "TBCA-BRC0158G",
+      "name": "Queijo cottage de leite de vaca integral",
+      "aliases": ["queijo cottage", "cottage"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":116,"protein_g":9.70,"carbohydrate_g":3.20,"fiber_g":0.0,"fat_g":7.10,"sodium_mg":290},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0158G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 colher de sopa cheia","grams":25}],
+      "tags": ["dairy","cheese","milk","imported_composition","restriction_profile_partially_unverified"]
+    },
+    {
+      "id": "TBCA-BRC0048G",
+      "name": "Queijo coalho",
+      "aliases": ["queijo coalho", "coalho"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":335,"protein_g":23.7,"carbohydrate_g":1.94,"fiber_g":0.0,"fat_g":25.9,"sodium_mg":526},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0048G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 pedaço médio","grams":50}],
+      "tags": ["dairy","cheese","milk","brazilian","restriction_profile_partially_unverified"]
+    },
+    {
+      "id": "TBCA-BRC0154G",
+      "name": "Queijo Minas meia cura",
+      "aliases": ["queijo minas meia cura", "minas meia cura", "queijo meia cura"],
+      "group": "laticínios",
+      "food_state": "ready_to_eat",
+      "nutrition": {"basis_g":100,"energy_kcal":321,"protein_g":21.2,"carbohydrate_g":3.60,"fiber_g":0.0,"fat_g":24.6,"sodium_mg":501},
+      "sources": [{"source_id":"TBCA_USP_FORC","record_id":"BRC0154G","version":"7.3","year":2025,"status":"validated","source_url":"https://www.tbca.net.br/"}],
+      "diet_compatibility": {"omnivore":"allowed","vegetarian":"unknown_requires_ingredient_check","vegan":"not_allowed","gluten_free":"unknown_requires_ingredient_check","lactose_free":"unknown_requires_ingredient_check"},
+      "allergens": ["milk"],
+      "household_measures": [{"label":"1 fatia média","grams":30}],
+      "tags": ["dairy","cheese","milk","brazilian","restriction_profile_partially_unverified"]
+    }
+  ]
+}
