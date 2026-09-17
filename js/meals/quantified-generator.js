@@ -46,6 +46,17 @@ function trainingRoles(count, trainingTime) {
 function normalizedTerms(profile) {
   return `${profile.avoid || ''},${profile.allergies || ''}`.toLowerCase().split(/[,;]/).map(x => x.trim()).filter(x => x.length >= 3);
 }
+function normalizedSearchText(value) {
+  return String(value || '').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function foodMatchesQuery(food, query) {
+  const term = normalizedSearchText(query);
+  if (term.length < 2 || !food || food.food_state === 'raw') return false;
+  return [food.name, ...(food.aliases || [])]
+    .map(normalizedSearchText)
+    .some(value => value.includes(term));
+}
 
 function recipeCompatible(recipe, profile, foodIndex) {
   const preference = profile.preferences || 'brasileira';
@@ -135,7 +146,8 @@ function stapleCompatibility(food, profile) {
 function stapleScheduleMatches(staple, dayIndex) {
   const frequency = Math.max(1, Math.min(7, Math.round(Number(staple.frequency) || 7)));
   if (frequency >= 7) return true;
-  const offset = hashSeed(staple.foodId) % 7;
+  const identity = staple.foodId || staple.query || 'staple';
+  const offset = hashSeed(identity) % 7;
   const days = new Set(Array.from({length: frequency}, (_, index) => (Math.floor(index * 7 / frequency) + offset) % 7));
   return days.has(dayIndex);
 }
@@ -167,12 +179,30 @@ function adjustableStapleGrams(food, dailyTarget, mealShare) {
   return roundTo5(grams);
 }
 
+function resolveStapleFood(staple, foodIndex, profile, dayIndex) {
+  if (staple.foodId) {
+    const food = foodIndex.get(staple.foodId);
+    const compatibility = stapleCompatibility(food, profile);
+    return food && compatibility.allowed ? { food, compatibility } : null;
+  }
+
+  const candidates = [...foodIndex.values()]
+    .filter(food => foodMatchesQuery(food, staple.query))
+    .map(food => ({ food, compatibility: stapleCompatibility(food, profile) }))
+    .filter(item => item.compatibility.allowed);
+
+  if (!candidates.length) return null;
+  const start = hashSeed(`${staple.query}|${dayIndex}`) % candidates.length;
+  return candidates[start];
+}
+
 function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, shares) {
   const raw = Array.isArray(profile.staples) ? profile.staples : [];
   return raw.map(staple => {
-    const food = foodIndex.get(staple.foodId);
-    const compatibility = stapleCompatibility(food, profile);
-    if (!food || !compatibility.allowed || !stapleScheduleMatches(staple, dayIndex)) return null;
+    if (!stapleScheduleMatches(staple, dayIndex)) return null;
+    const resolved = resolveStapleFood(staple, foodIndex, profile, dayIndex);
+    if (!resolved) return null;
+    const { food, compatibility } = resolved;
     const requestedMeal = STAPLE_MEALS.has(staple.meal) ? staple.meal : 'breakfast';
     const meal = requestedMeal === 'any' ? preferredMealForFood(food, slots) : requestedMeal;
     const foundSlotIndex = slots.findIndex(([, kind]) => kind === meal);
@@ -184,6 +214,8 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
       : adjustableStapleGrams(food, dailyTarget, share);
     return {
       foodId: food.id,
+      query: staple.query || '',
+      displayName: staple.query || food.name,
       name: food.name,
       meal,
       slotIndex,
@@ -195,10 +227,15 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
   }).filter(Boolean);
 }
 
-function avoidStapleDuplicates(pool, staples = []) {
+function avoidStapleDuplicates(pool, staples = [], foodIndex) {
   if (!staples.length) return pool;
-  const ids = new Set(staples.map(item => item.foodId));
-  const filtered = pool.filter(recipe => !recipe.ingredients.some(item => ids.has(item.foodId)));
+  const filtered = pool.filter(recipe => !recipe.ingredients.some(item => {
+    const food = foodIndex.get(item.foodId);
+    return staples.some(staple =>
+      staple.foodId === item.foodId
+      || (staple.query && foodMatchesQuery(food, staple.query))
+    );
+  }));
   return filtered.length ? filtered : pool;
 }
 
@@ -235,7 +272,7 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
       if (!usedByKind.has(kind)) usedByKind.set(kind, new Set());
       const staplesForMeal = dayStaples.filter(item => item.slotIndex === slotIndex);
       let slotPool = poolForSlot(pools[kind], kind, dayIndex, profile, foodIndex);
-      slotPool = avoidStapleDuplicates(slotPool, staplesForMeal);
+      slotPool = avoidStapleDuplicates(slotPool, staplesForMeal, foodIndex);
       const recipe = chooseRecipe(slotPool, dayIndex, slotIndex, seed, usedByKind.get(kind));
       usedByKind.get(kind).add(recipe.id);
 
@@ -244,6 +281,8 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
       const stapleIngredients = staplesForMeal.map(item => ({
         foodId: item.foodId,
         name: item.name,
+        displayName: item.displayName || item.name,
+        query: item.query || '',
         grams: item.grams,
         nutrients: item.nutrients,
         isStaple: true,
@@ -254,7 +293,7 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
       const nutrients = addNutrients(ingredients.map(item => item.nutrients));
       const components = [
         ...(quantified?.ingredients || []).map(item => `${item.grams} g ${item.name}`),
-        ...stapleIngredients.map(item => `${item.grams} g ${item.name} · indispensável${item.warnings?.length ? ' · confirme o rótulo' : ''}`)
+        ...stapleIngredients.map(item => `${item.grams} g ${item.displayName || item.name} · indispensável${item.warnings?.length ? ' · confirme o rótulo' : ''}`)
       ];
 
       return {
@@ -275,6 +314,8 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
       staplesApplied: dayStaples.map(item => ({
         foodId: item.foodId,
         name: item.name,
+        displayName: item.displayName || item.name,
+        query: item.query || '',
         meal: item.meal,
         grams: item.grams,
         fixed: item.fixed,
