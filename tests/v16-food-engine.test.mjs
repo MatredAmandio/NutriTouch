@@ -210,6 +210,30 @@ const proteinFamilies = [
 ].filter(Boolean);
 assert.ok(new Set(proteinFamilies).size >= 3, 'Brazilian week should rotate through multiple animal protein families');
 
+const lactoseStapleWeek = generateQuantifiedWeeklyPlan({
+  ...baseProfile,
+  intolerance: 'lactose',
+  staples: [{ foodId: 'TACO-2011-053', meal: 'breakfast', frequency: 7, mode: 'adjust', grams: null }]
+}, foods, 1900, new Date('2026-09-14T12:00:00'));
+assert.equal(lactoseStapleWeek.length, 7);
+assert.ok(lactoseStapleWeek.every(day => day.staplesApplied.some(item => item.foodId === 'TACO-2011-053')), 'bread with unknown lactose status should remain when explicitly chosen as indispensable');
+assert.ok(lactoseStapleWeek.every(day => day.staplesApplied.find(item => item.foodId === 'TACO-2011-053')?.warnings?.length), 'uncertain indispensable bread should carry a label-check warning');
+assert.ok(lactoseStapleWeek.flatMap(day => day.meals).some(meal => meal.meal.components.some(component => /Pão de trigo, francês.*indispensável.*confirme o rótulo/i.test(component))), 'uncertain indispensable bread should be visibly identified in the menu');
+
+const vegetarianStapleWeek = generateQuantifiedWeeklyPlan({
+  ...baseProfile,
+  preferences: 'vegetariana',
+  staples: [{ foodId: 'TACO-2011-053', meal: 'breakfast', frequency: 7, mode: 'fixed', grams: 50 }]
+}, foods, 1900, new Date('2026-09-14T12:00:00'));
+assert.ok(vegetarianStapleWeek.every(day => day.staplesApplied.some(item => item.foodId === 'TACO-2011-053' && item.grams === 50)), 'vegetarian unknown status should not silently discard an explicitly chosen bread');
+
+const glutenBlockedStapleWeek = generateQuantifiedWeeklyPlan({
+  ...baseProfile,
+  preferences: 'sem-gluten',
+  staples: [{ foodId: 'TACO-2011-053', meal: 'breakfast', frequency: 7, mode: 'fixed', grams: 50 }]
+}, foods, 1900, new Date('2026-09-14T12:00:00'));
+assert.ok(glutenBlockedStapleWeek.every(day => !day.staplesApplied.some(item => item.foodId === 'TACO-2011-053')), 'explicitly not-allowed gluten bread must still be blocked for gluten-free profiles');
+
 const vegetarianWeek = generateQuantifiedWeeklyPlan({ ...baseProfile, preferences: 'vegetariana' }, foods, 1900, new Date('2026-09-14T12:00:00'));
 assert.equal(vegetarianWeek.length, 7);
 assert.ok(vegetarianWeek.flatMap(day => day.meals).every(meal => !/frango|tilápia|sardinha|atum|carne|bife|patinho/i.test(meal.meal.title)));
