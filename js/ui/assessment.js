@@ -5,9 +5,15 @@ const ACTIVITIES = new Set(['sedentary', 'light', 'moderate', 'very']);
 const PREFERENCES = new Set(['brasileira', 'mediterranea', 'vegetariana', 'vegana', 'sem-gluten', 'fitness']);
 const INTOLERANCES = new Set(['none', 'lactose', 'gluten_intolerance', 'fructose', 'ncgs', 'other']);
 const CONDITIONS = new Set(['', 'diabetes', 'hypertension', 'pregnancy', 'elderly']);
+const STAPLE_MEALS = new Set(['any', 'breakfast', 'lunch', 'snack', 'dinner']);
+const STAPLE_MODES = new Set(['adjust', 'fixed']);
 
 function selected(profile, key, value) {
   return String(profile[key]) === String(value) ? ' selected' : '';
+}
+
+function selectedValue(actual, expected) {
+  return String(actual) === String(expected) ? ' selected' : '';
 }
 
 function optionCard(profile, key, value, title, description) {
@@ -17,7 +23,66 @@ function optionCard(profile, key, value, title, description) {
   </button>`;
 }
 
-export function renderAssessment(container, step, profile) {
+function renderStaplesEditor(profile, foods = []) {
+  const staples = Array.isArray(profile.staples) ? profile.staples : [];
+  const foodIndex = new Map((foods || []).map(food => [food.id, food]));
+  const options = (foods || [])
+    .slice()
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), 'pt-BR'))
+    .map(food => `<option value="${escapeHTML(food.name)}"></option>`)
+    .join('');
+
+  const rows = staples.map((item, index) => {
+    const food = foodIndex.get(item.foodId);
+    const name = food?.name || item.foodId;
+    const mode = STAPLE_MODES.has(item.mode) ? item.mode : 'adjust';
+    const meal = STAPLE_MEALS.has(item.meal) ? item.meal : 'breakfast';
+    const frequency = Math.max(1, Math.min(7, Number(item.frequency) || 7));
+    const grams = Number(item.grams) > 0 ? Number(item.grams) : '';
+    return `<div class="card compact-card" data-staple-row data-food-id="${escapeHTML(item.foodId)}">
+      <strong>${escapeHTML(name)}</strong>
+      <div class="field-row">
+        <label>Em qual refeição?
+          <select data-staple-field="meal">
+            <option value="breakfast"${selectedValue(meal,'breakfast')}>Café da manhã</option>
+            <option value="lunch"${selectedValue(meal,'lunch')}>Almoço</option>
+            <option value="snack"${selectedValue(meal,'snack')}>Lanche</option>
+            <option value="dinner"${selectedValue(meal,'dinner')}>Jantar</option>
+            <option value="any"${selectedValue(meal,'any')}>Qualquer refeição</option>
+          </select>
+        </label>
+        <label>Dias por semana
+          <input data-staple-field="frequency" type="number" min="1" max="7" step="1" value="${frequency}">
+        </label>
+      </div>
+      <label>Quantidade
+        <select data-staple-field="mode">
+          <option value="adjust"${selectedValue(mode,'adjust')}>Ajustar automaticamente para minha meta</option>
+          <option value="fixed"${selectedValue(mode,'fixed')}>Manter uma quantidade exata</option>
+        </select>
+      </label>
+      ${mode === 'fixed'
+        ? `<label>Quantidade fixa (g ou mL aproximados)<input data-staple-field="grams" type="number" min="5" max="1000" step="5" value="${grams}" placeholder="Ex.: 50"></label>`
+        : '<p class="helper">O NutriTouch ajustará a porção e recalculará o restante do dia para permanecer próximo da meta energética.</p>'}
+      <button type="button" class="text-button danger-text" data-remove-staple="${index}">Retirar dos indispensáveis</button>
+    </div>`;
+  }).join('');
+
+  return `<div class="card card-soft" data-staples-editor>
+    <h3>Meus indispensáveis</h3>
+    <p class="helper">Escolha alimentos validados que fazem parte da sua rotina. Você pode pedir que o app ajuste a quantidade automaticamente ou preserve uma porção exata.</p>
+    ${foods.length ? `<label>Adicionar alimento
+      <input id="stapleFoodSearch" list="stapleFoodOptions" placeholder="Digite pão, café, arroz, banana..." autocomplete="off">
+      <datalist id="stapleFoodOptions">${options}</datalist>
+    </label>
+    <button type="button" class="secondary-button" data-add-staple>Adicionar aos indispensáveis</button>`
+      : '<p class="helper">Carregando a base de alimentos validados...</p>'}
+    ${rows || '<p class="helper">Nenhum alimento indispensável selecionado ainda.</p>'}
+    <p class="helper">Limite: até 8 alimentos. As restrições alimentares e regras de segurança continuam tendo prioridade.</p>
+  </div>`;
+}
+
+export function renderAssessment(container, step, profile, foods = []) {
   const safe = (key) => escapeHTML(profile[key] ?? '');
   let html = '';
 
@@ -115,7 +180,8 @@ export function renderAssessment(container, step, profile) {
         ${optionCard(profile,'preferences','fitness','🏋️ Fitness e performance','Foco em treino, desempenho e recuperação.')}
       </div>
       <label>Alimentos que deseja evitar<input data-field="avoid" value="${safe('avoid')}" placeholder="Separe por vírgulas"></label>
-      <label>Alergias alimentares<input data-field="allergies" value="${safe('allergies')}" placeholder="Separe por vírgulas"></label>`;
+      <label>Alergias alimentares<input data-field="allergies" value="${safe('allergies')}" placeholder="Separe por vírgulas"></label>
+      ${renderStaplesEditor(profile, foods)}`;
   }
 
   if (step === 5) {
@@ -153,6 +219,22 @@ export function collectAssessment(container, profile) {
     const numeric = field.type === 'number';
     next[key] = numeric ? (field.value === '' ? '' : Number(field.value)) : field.value;
   });
+
+  const staplesEditor = container.querySelector('[data-staples-editor]');
+  if (staplesEditor) {
+    next.staples = [...staplesEditor.querySelectorAll('[data-staple-row]')].map(row => {
+      const read = field => row.querySelector(`[data-staple-field="${field}"]`)?.value;
+      const mode = read('mode') || 'adjust';
+      const gramsValue = Number(read('grams'));
+      return {
+        foodId: row.dataset.foodId,
+        meal: read('meal') || 'breakfast',
+        frequency: Math.max(1, Math.min(7, Math.round(Number(read('frequency')) || 7))),
+        mode,
+        grams: mode === 'fixed' && Number.isFinite(gramsValue) && gramsValue > 0 ? gramsValue : null
+      };
+    });
+  }
   return next;
 }
 
@@ -218,6 +300,15 @@ export function validateAssessmentStep(step, profile) {
     const meals = Number(profile.meals);
     if (!Number.isInteger(meals) || meals < 3 || meals > 6) return 'Selecione entre 3 e 6 refeições por dia.';
     if (!PREFERENCES.has(profile.preferences)) return 'Selecione um perfil alimentar disponível na V16.';
+    const staples = Array.isArray(profile.staples) ? profile.staples : [];
+    if (staples.length > 8) return 'Selecione no máximo 8 alimentos indispensáveis.';
+    for (const item of staples) {
+      if (!item?.foodId || !STAPLE_MEALS.has(item.meal) || !STAPLE_MODES.has(item.mode)) return 'Revise os alimentos indispensáveis.';
+      if (!Number.isInteger(Number(item.frequency)) || Number(item.frequency) < 1 || Number(item.frequency) > 7) return 'Use de 1 a 7 dias por semana para cada alimento indispensável.';
+      if (item.mode === 'fixed' && (!Number.isFinite(Number(item.grams)) || Number(item.grams) < 5 || Number(item.grams) > 1000)) {
+        return 'Informe uma quantidade fixa válida entre 5 e 1000 g ou mL.';
+      }
+    }
   }
 
   if (step === 5) {
