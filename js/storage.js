@@ -12,6 +12,27 @@ const ASSESSMENT_FIELDS = Object.freeze([
   'avoid','allergies','intolerance','condition'
 ]);
 
+const STAPLE_MEALS = new Set(['any', 'breakfast', 'lunch', 'snack', 'dinner']);
+const STAPLE_MODES = new Set(['adjust', 'fixed']);
+
+function normalizeStaples(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value.map(item => {
+    const foodId = String(item?.foodId || '').trim();
+    if (!foodId || seen.has(foodId)) return null;
+    seen.add(foodId);
+    const meal = STAPLE_MEALS.has(item?.meal) ? item.meal : 'breakfast';
+    const mode = STAPLE_MODES.has(item?.mode) ? item.mode : 'adjust';
+    const frequency = Math.max(1, Math.min(7, Math.round(Number(item?.frequency) || 7)));
+    const rawGrams = Number(item?.grams);
+    const grams = mode === 'fixed' && Number.isFinite(rawGrams) && rawGrams > 0
+      ? Math.max(5, Math.min(1000, rawGrams))
+      : null;
+    return { foodId, meal, frequency, mode, grams };
+  }).filter(Boolean).slice(0, 8);
+}
+
 export const DEFAULT_PROFILE = Object.freeze({
   age: '',
   sex: 'female',
@@ -32,6 +53,7 @@ export const DEFAULT_PROFILE = Object.freeze({
   allergies: '',
   intolerance: 'none',
   condition: '',
+  staples: [],
   _assessmentCompleted: false,
   _assessmentCompletedSignature: '',
   _assessmentCompletedAt: '',
@@ -72,6 +94,7 @@ export function writeJSON(key, value) {
 export function getProfile() {
   const stored = readJSON(STORAGE_KEYS.profile, null);
   const profile = stored ? { ...DEFAULT_PROFILE, ...stored } : { ...DEFAULT_PROFILE };
+  profile.staples = normalizeStaples(profile.staples);
   if (profile.preferences === 'ayurveda') {
     profile.preferences = '';
     profile._assessmentCompleted = false;
@@ -81,7 +104,7 @@ export function getProfile() {
 }
 
 export function saveProfile(profile) {
-  const saved = { ...DEFAULT_PROFILE, ...profile };
+  const saved = { ...DEFAULT_PROFILE, ...profile, staples: normalizeStaples(profile?.staples) };
   writeJSON(STORAGE_KEYS.profile, saved);
   localStorage.setItem(STORAGE_KEYS.profileVersion, String(APP_VERSION));
   return saved;
@@ -91,6 +114,7 @@ export function completeAssessment(profile) {
   const completed = {
     ...DEFAULT_PROFILE,
     ...profile,
+    staples: normalizeStaples(profile?.staples),
     _assessmentCompleted: true,
     _assessmentCompletedAt: new Date().toISOString()
   };
