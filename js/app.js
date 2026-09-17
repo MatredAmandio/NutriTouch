@@ -134,13 +134,32 @@ function renderAssessmentScreen() {
   $('progressBar').style.width = `${state.step * 20}%`;
   $('assessmentBack').hidden = state.step === 1;
   $('assessmentNext').textContent = state.step === 5 ? 'Calcular meu plano' : 'Continuar';
-  renderAssessment(box, state.step, state.profile);
+  renderAssessment(box, state.step, state.profile, state.foods.validated || []);
 }
 
 function persistCurrentAssessmentFields() {
   state.profile = collectAssessment($('assessmentBox'), state.profile);
   state.profile = saveProfile(state.profile);
   return state.profile;
+}
+
+function normalizedFoodText(value) {
+  return String(value || '').trim().toLocaleLowerCase('pt-BR');
+}
+
+function findValidatedFood(query) {
+  const term = normalizedFoodText(query);
+  if (!term) return null;
+  return (state.foods.validated || []).find(food => {
+    if (normalizedFoodText(food.name) === term) return true;
+    return (food.aliases || []).some(alias => normalizedFoodText(alias) === term);
+  }) || null;
+}
+
+function defaultFixedGrams(food) {
+  const household = Number(food?.household_measures?.[0]?.grams);
+  if (Number.isFinite(household) && household > 0) return household;
+  return 50;
 }
 
 function renderResultsScreen() { recalculate(); renderResult($('resultBox'), state.result); }
@@ -197,6 +216,7 @@ function renderEvolutionScreen() {
 async function initFoods() {
   state.foods = await loadFoodDatabase();
   recalculate();
+  if ($('assessment').classList.contains('is-active') && state.step === 4) renderAssessmentScreen();
   if ($('foods').classList.contains('is-active')) renderFoodsScreen();
   if ($('menu').classList.contains('is-active')) renderMenuScreen();
 }
@@ -206,6 +226,35 @@ document.addEventListener('click', event => {
   if (nav) {
     if ($('assessment').classList.contains('is-active')) persistCurrentAssessmentFields();
     go(nav.dataset.nav); return;
+  }
+
+  const addStaple = event.target.closest('[data-add-staple]');
+  if (addStaple) {
+    persistCurrentAssessmentFields();
+    const input = $('stapleFoodSearch');
+    const food = findValidatedFood(input?.value);
+    if (!food) { showToast('Selecione um alimento existente na base validada.'); return; }
+    const staples = Array.isArray(state.profile.staples) ? state.profile.staples : [];
+    if (staples.some(item => item.foodId === food.id)) { showToast('Este alimento já está nos seus indispensáveis.'); return; }
+    if (staples.length >= 8) { showToast('Você pode selecionar até 8 alimentos indispensáveis.'); return; }
+    state.profile = saveProfile({
+      ...state.profile,
+      staples: [...staples, { foodId: food.id, meal: 'breakfast', frequency: 7, mode: 'adjust', grams: null }]
+    });
+    renderAssessmentScreen();
+    showToast('Alimento adicionado aos indispensáveis.');
+    return;
+  }
+
+  const removeStaple = event.target.closest('[data-remove-staple]');
+  if (removeStaple) {
+    persistCurrentAssessmentFields();
+    const index = Number(removeStaple.dataset.removeStaple);
+    const staples = Array.isArray(state.profile.staples) ? state.profile.staples : [];
+    state.profile = saveProfile({ ...state.profile, staples: staples.filter((_, itemIndex) => itemIndex !== index) });
+    renderAssessmentScreen();
+    showToast('Alimento retirado dos indispensáveis.');
+    return;
   }
 
   const action = event.target.closest('[data-action]')?.dataset.action;
@@ -238,6 +287,21 @@ document.addEventListener('click', event => {
   if (remove && window.confirm('Excluir este registro de evolução?')) {
     deleteEvolutionEntry(remove.dataset.deleteEvolution); renderEvolutionScreen(); showToast('Registro excluído.');
   }
+});
+
+document.addEventListener('change', event => {
+  const modeField = event.target.closest('[data-staple-field="mode"]');
+  if (!modeField) return;
+  persistCurrentAssessmentFields();
+  const row = modeField.closest('[data-staple-row]');
+  if (modeField.value === 'fixed' && row) {
+    const staples = Array.isArray(state.profile.staples) ? [...state.profile.staples] : [];
+    const index = [...document.querySelectorAll('[data-staple-row]')].indexOf(row);
+    const food = (state.foods.validated || []).find(item => item.id === staples[index]?.foodId);
+    if (staples[index] && !Number(staples[index].grams)) staples[index] = { ...staples[index], grams: defaultFixedGrams(food) };
+    state.profile = saveProfile({ ...state.profile, staples });
+  }
+  renderAssessmentScreen();
 });
 
 $('assessmentNext').addEventListener('click', () => {
