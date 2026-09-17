@@ -20,8 +20,10 @@ function normalizeStaples(value) {
   const seen = new Set();
   return value.map(item => {
     const foodId = String(item?.foodId || '').trim();
-    if (!foodId || seen.has(foodId)) return null;
-    seen.add(foodId);
+    const query = String(item?.query || '').trim();
+    const identity = foodId || `query:${query.toLocaleLowerCase('pt-BR')}`;
+    if ((!foodId && query.length < 2) || !identity || seen.has(identity)) return null;
+    seen.add(identity);
     const meal = STAPLE_MEALS.has(item?.meal) ? item.meal : 'breakfast';
     const mode = STAPLE_MODES.has(item?.mode) ? item.mode : 'adjust';
     const frequency = Math.max(1, Math.min(7, Math.round(Number(item?.frequency) || 7)));
@@ -29,7 +31,7 @@ function normalizeStaples(value) {
     const grams = mode === 'fixed' && Number.isFinite(rawGrams) && rawGrams > 0
       ? Math.max(5, Math.min(1000, rawGrams))
       : null;
-    return { foodId, meal, frequency, mode, grams };
+    return { foodId, query, meal, frequency, mode, grams };
   }).filter(Boolean).slice(0, 8);
 }
 
