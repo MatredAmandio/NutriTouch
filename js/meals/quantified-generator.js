@@ -154,7 +154,8 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
     if (!food || !stapleCompatible(food, profile) || !stapleScheduleMatches(staple, dayIndex)) return null;
     const requestedMeal = STAPLE_MEALS.has(staple.meal) ? staple.meal : 'breakfast';
     const meal = requestedMeal === 'any' ? preferredMealForFood(food, slots) : requestedMeal;
-    const slotIndex = Math.max(0, slots.findIndex(([, kind]) => kind === meal));
+    const foundSlotIndex = slots.findIndex(([, kind]) => kind === meal);
+    const slotIndex = foundSlotIndex >= 0 ? foundSlotIndex : 0;
     const share = shares[slotIndex] || shares[0] || 0.2;
     const fixed = staple.mode === 'fixed' && Number(staple.grams) > 0;
     const grams = fixed
@@ -164,6 +165,7 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
       foodId: food.id,
       name: food.name,
       meal,
+      slotIndex,
       grams,
       fixed,
       nutrients: nutrientsFor(food, grams)
@@ -209,7 +211,7 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
 
     const meals = slots.map(([label, kind], slotIndex) => {
       if (!usedByKind.has(kind)) usedByKind.set(kind, new Set());
-      const staplesForMeal = dayStaples.filter(item => item.meal === kind);
+      const staplesForMeal = dayStaples.filter(item => item.slotIndex === slotIndex);
       let slotPool = poolForSlot(pools[kind], kind, dayIndex, profile, foodIndex);
       slotPool = avoidStapleDuplicates(slotPool, staplesForMeal);
       const recipe = chooseRecipe(slotPool, dayIndex, slotIndex, seed, usedByKind.get(kind));
