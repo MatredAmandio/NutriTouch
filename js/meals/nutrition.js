@@ -44,12 +44,14 @@ function roundTo5(value) {
   return Math.max(5, Math.round(value / 5) * 5);
 }
 
-export function scaleRecipeToTarget(recipe, targetKcal, foodIndex) {
+export function scaleRecipeToTarget(recipe, targetKcal, foodIndex, options = {}) {
   const base = recipeNutrition(recipe, foodIndex);
   if (!base || !base.nutrients.energy_kcal) return null;
   const requested = Number(targetKcal) || base.nutrients.energy_kcal;
+  const minFactor = Number.isFinite(Number(options.minFactor)) ? Math.max(0.05, Number(options.minFactor)) : 0.65;
+  const maxFactor = Number.isFinite(Number(options.maxFactor)) ? Math.max(minFactor, Number(options.maxFactor)) : 1.6;
   const rawFactor = requested / base.nutrients.energy_kcal;
-  const factor = Math.min(1.6, Math.max(0.65, rawFactor));
+  const factor = Math.min(maxFactor, Math.max(minFactor, rawFactor));
   const scaledRecipe = {
     ...recipe,
     ingredients: recipe.ingredients.map(item => ({ ...item, grams: roundTo5(item.grams * factor) }))
