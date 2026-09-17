@@ -43,6 +43,19 @@ for (const day of week) {
   assert.ok(day.nutrients.energy_kcal < 2200, 'daily plan should stay close to the 2000 kcal target after reserving staples');
 }
 
+const genericBreadWeek = generateQuantifiedWeeklyPlan({
+  ...baseProfile,
+  staples: [{ foodId: '', query: 'Pão', meal: 'breakfast', frequency: 7, mode: 'adjust', grams: null }]
+}, foods, 2000, new Date('2026-09-14T12:00:00'));
+assert.equal(genericBreadWeek.length, 7);
+for (const day of genericBreadWeek) {
+  const breakfast = day.meals.find(meal => meal.kind === 'breakfast');
+  const genericBread = breakfast.ingredients.find(item => item.isStaple && item.query === 'Pão');
+  assert.ok(genericBread, 'generic Pão must resolve to a validated bread every day');
+  assert.ok(/pão|torrada/i.test(genericBread.name), 'generic Pão must resolve to a bread-family record');
+  assert.ok(breakfast.meal.components.some(component => / g Pão · indispensável/i.test(component)), 'menu should display the generic term requested by the user');
+}
+
 const threeTimes = generateQuantifiedWeeklyPlan({
   ...baseProfile,
   staples: [{ foodId: 'USDA-169926', meal: 'snack', frequency: 3, mode: 'adjust', grams: null }]
