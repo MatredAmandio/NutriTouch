@@ -1,4 +1,4 @@
-const CACHE = 'nutritouch-v16-10';
+const CACHE = 'nutritouch-v16-11';
 const CORE = [
   './',
   './index.html',
