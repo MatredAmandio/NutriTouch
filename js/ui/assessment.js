@@ -34,12 +34,12 @@ function renderStaplesEditor(profile, foods = []) {
 
   const rows = staples.map((item, index) => {
     const food = foodIndex.get(item.foodId);
-    const name = food?.name || item.foodId;
+    const name = item.query || food?.name || item.foodId;
     const mode = STAPLE_MODES.has(item.mode) ? item.mode : 'adjust';
     const meal = STAPLE_MEALS.has(item.meal) ? item.meal : 'breakfast';
     const frequency = Math.max(1, Math.min(7, Number(item.frequency) || 7));
     const grams = Number(item.grams) > 0 ? Number(item.grams) : '';
-    return `<div class="card compact-card" data-staple-row data-food-id="${escapeHTML(item.foodId)}">
+    return `<div class="card compact-card" data-staple-row data-food-id="${escapeHTML(item.foodId || '')}" data-staple-query="${escapeHTML(item.query || '')}">
       <strong>${escapeHTML(name)}</strong>
       <div class="field-row">
         <label>Em qual refeição?
@@ -70,7 +70,7 @@ function renderStaplesEditor(profile, foods = []) {
 
   return `<div class="card card-soft" data-staples-editor>
     <h3>Meus indispensáveis</h3>
-    <p class="helper">Escolha alimentos validados que fazem parte da sua rotina. Você pode pedir que o app ajuste a quantidade automaticamente ou preserve uma porção exata.</p>
+    <p class="helper">Digite o alimento como você pensa nele — por exemplo, “pão”, “café” ou “banana”. Se o termo representar vários alimentos validados, o NutriTouch escolherá uma opção compatível e ajustará a porção.</p>
     ${foods.length ? `<label>Adicionar alimento
       <input id="stapleFoodSearch" list="stapleFoodOptions" placeholder="Digite pão, café, arroz, banana..." autocomplete="off">
       <datalist id="stapleFoodOptions">${options}</datalist>
@@ -227,7 +227,8 @@ export function collectAssessment(container, profile) {
       const mode = read('mode') || 'adjust';
       const gramsValue = Number(read('grams'));
       return {
-        foodId: row.dataset.foodId,
+        foodId: row.dataset.foodId || '',
+        query: row.dataset.stapleQuery || '',
         meal: read('meal') || 'breakfast',
         frequency: Math.max(1, Math.min(7, Math.round(Number(read('frequency')) || 7))),
         mode,
@@ -303,7 +304,8 @@ export function validateAssessmentStep(step, profile) {
     const staples = Array.isArray(profile.staples) ? profile.staples : [];
     if (staples.length > 8) return 'Selecione no máximo 8 alimentos indispensáveis.';
     for (const item of staples) {
-      if (!item?.foodId || !STAPLE_MEALS.has(item.meal) || !STAPLE_MODES.has(item.mode)) return 'Revise os alimentos indispensáveis.';
+      const hasReference = Boolean(item?.foodId) || String(item?.query || '').trim().length >= 2;
+      if (!hasReference || !STAPLE_MEALS.has(item.meal) || !STAPLE_MODES.has(item.mode)) return 'Revise os alimentos indispensáveis.';
       if (!Number.isInteger(Number(item.frequency)) || Number(item.frequency) < 1 || Number(item.frequency) > 7) return 'Use de 1 a 7 dias por semana para cada alimento indispensável.';
       if (item.mode === 'fixed' && (!Number.isFinite(Number(item.grams)) || Number(item.grams) < 5 || Number(item.grams) > 1000)) {
         return 'Informe uma quantidade fixa válida entre 5 e 1000 g ou mL.';
