@@ -96,20 +96,40 @@ function chooseRecipe(pool, dayIndex, slotIndex, seed, used) {
   return pool[start];
 }
 
-function stapleCompatible(food, profile) {
-  if (!food) return false;
+function stapleCompatibility(food, profile) {
+  if (!food) return { allowed: false, warnings: [] };
   const preference = profile.preferences || 'brasileira';
   const compatibility = food.diet_compatibility || {};
-  if (preference === 'vegana' && compatibility.vegan !== 'allowed') return false;
-  if (preference === 'vegetariana' && compatibility.vegetarian !== 'allowed') return false;
-  if (profile.intolerance === 'lactose' && !String(compatibility.lactose_free || '').startsWith('allowed')) return false;
+  const warnings = [];
+
+  const explicitBlock = status => String(status || '') === 'not_allowed';
+  const uncertain = status => String(status || '').startsWith('unknown');
+
+  if (preference === 'vegana') {
+    if (explicitBlock(compatibility.vegan)) return { allowed: false, warnings: [] };
+    if (uncertain(compatibility.vegan)) warnings.push('confirme ingredientes para dieta vegana');
+  }
+  if (preference === 'vegetariana') {
+    if (explicitBlock(compatibility.vegetarian)) return { allowed: false, warnings: [] };
+    if (uncertain(compatibility.vegetarian)) warnings.push('confirme ingredientes para dieta vegetariana');
+  }
+  if (profile.intolerance === 'lactose') {
+    if (explicitBlock(compatibility.lactose_free)) return { allowed: false, warnings: [] };
+    if (uncertain(compatibility.lactose_free)) warnings.push('confirme presença de lactose no rótulo');
+  }
   const glutenRestricted = preference === 'sem-gluten' || ['gluten_intolerance','ncgs'].includes(profile.intolerance);
-  if (glutenRestricted && compatibility.gluten_free !== 'allowed') return false;
+  if (glutenRestricted) {
+    if (explicitBlock(compatibility.gluten_free)) return { allowed: false, warnings: [] };
+    if (uncertain(compatibility.gluten_free)) warnings.push('confirme glúten e contaminação cruzada no rótulo');
+  }
 
   const terms = normalizedTerms(profile);
-  if (!terms.length) return true;
-  const searchable = `${food.name || ''} ${(food.aliases || []).join(' ')} ${(food.allergens || []).join(' ')}`.toLowerCase();
-  return !terms.some(term => searchable.includes(term));
+  if (terms.length) {
+    const searchable = `${food.name || ''} ${(food.aliases || []).join(' ')} ${(food.allergens || []).join(' ')}`.toLowerCase();
+    if (terms.some(term => searchable.includes(term))) return { allowed: false, warnings: [] };
+  }
+
+  return { allowed: true, warnings };
 }
 
 function stapleScheduleMatches(staple, dayIndex) {
@@ -151,7 +171,8 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
   const raw = Array.isArray(profile.staples) ? profile.staples : [];
   return raw.map(staple => {
     const food = foodIndex.get(staple.foodId);
-    if (!food || !stapleCompatible(food, profile) || !stapleScheduleMatches(staple, dayIndex)) return null;
+    const compatibility = stapleCompatibility(food, profile);
+    if (!food || !compatibility.allowed || !stapleScheduleMatches(staple, dayIndex)) return null;
     const requestedMeal = STAPLE_MEALS.has(staple.meal) ? staple.meal : 'breakfast';
     const meal = requestedMeal === 'any' ? preferredMealForFood(food, slots) : requestedMeal;
     const foundSlotIndex = slots.findIndex(([, kind]) => kind === meal);
@@ -168,6 +189,7 @@ function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, share
       slotIndex,
       grams,
       fixed,
+      warnings: compatibility.warnings,
       nutrients: nutrientsFor(food, grams)
     };
   }).filter(Boolean);
@@ -225,13 +247,14 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
         grams: item.grams,
         nutrients: item.nutrients,
         isStaple: true,
-        fixed: item.fixed
+        fixed: item.fixed,
+        warnings: item.warnings || []
       }));
       const ingredients = [...(quantified?.ingredients || []), ...stapleIngredients];
       const nutrients = addNutrients(ingredients.map(item => item.nutrients));
       const components = [
         ...(quantified?.ingredients || []).map(item => `${item.grams} g ${item.name}`),
-        ...stapleIngredients.map(item => `${item.grams} g ${item.name} · indispensável`)
+        ...stapleIngredients.map(item => `${item.grams} g ${item.name} · indispensável${item.warnings?.length ? ' · confirme o rótulo' : ''}`)
       ];
 
       return {
@@ -249,7 +272,14 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
       meals,
       nutrients: addNutrients(meals.map(meal => meal.nutrients)),
       nutrientStatus: 'validated-food-calculation',
-      staplesApplied: dayStaples.map(item => ({ foodId: item.foodId, name: item.name, meal: item.meal, grams: item.grams, fixed: item.fixed }))
+      staplesApplied: dayStaples.map(item => ({
+        foodId: item.foodId,
+        name: item.name,
+        meal: item.meal,
+        grams: item.grams,
+        fixed: item.fixed,
+        warnings: item.warnings || []
+      }))
     };
   });
 }
