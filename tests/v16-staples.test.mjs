@@ -51,11 +51,11 @@ const threeTimes = generateQuantifiedWeeklyPlan({
 const papayaDays = threeTimes.filter(day => day.meals.some(meal => meal.ingredients.some(item => item.foodId === 'USDA-169926' && item.isStaple)));
 assert.equal(papayaDays.length, 3, 'weekly indispensable frequency must be respected');
 
-const lactoseRestricted = generateQuantifiedWeeklyPlan({
+const explicitlyBlocked = generateQuantifiedWeeklyPlan({
   ...baseProfile,
-  intolerance: 'lactose',
+  preferences: 'vegana',
   staples: [{ foodId: 'TBCA-BRC0059G', meal: 'breakfast', frequency: 7, mode: 'fixed', grams: 40 }]
 }, foods, 1900, new Date('2026-09-14T12:00:00'));
-assert.ok(lactoseRestricted.every(day => day.meals.every(meal => !meal.ingredients.some(item => item.foodId === 'TBCA-BRC0059G' && item.isStaple))), 'safety restrictions must override indispensable foods');
+assert.ok(explicitlyBlocked.every(day => day.meals.every(meal => !meal.ingredients.some(item => item.foodId === 'TBCA-BRC0059G' && item.isStaple))), 'explicit not_allowed restrictions must override indispensable foods');
 
 console.log('V16 indispensable foods tests passed');
