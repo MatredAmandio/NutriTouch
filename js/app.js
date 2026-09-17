@@ -147,13 +147,34 @@ function normalizedFoodText(value) {
   return String(value || '').trim().toLocaleLowerCase('pt-BR');
 }
 
-function findValidatedFood(query) {
-  const term = normalizedFoodText(query);
-  if (!term) return null;
-  return (state.foods.validated || []).find(food => {
-    if (normalizedFoodText(food.name) === term) return true;
-    return (food.aliases || []).some(alias => normalizedFoodText(alias) === term);
-  }) || null;
+function normalizedSearchText(value) {
+  return normalizedFoodText(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function validatedFoodMatches(query) {
+  const term = normalizedSearchText(query);
+  if (term.length < 2) return [];
+  return (state.foods.validated || []).filter(food => {
+    if (food.food_state === 'raw') return false;
+    const fields = [food.name, ...(food.aliases || [])].map(normalizedSearchText);
+    return fields.some(value => value.includes(term));
+  });
+}
+
+function resolveStapleInput(query) {
+  const raw = String(query || '').trim();
+  const term = normalizedSearchText(raw);
+  if (term.length < 2) return null;
+  const matches = validatedFoodMatches(raw);
+  if (!matches.length) return null;
+
+  const exact = matches.find(food => {
+    const fields = [food.name, ...(food.aliases || [])].map(normalizedSearchText);
+    return fields.includes(term);
+  });
+  if (exact) return { foodId: exact.id, query: '' };
+
+  return { foodId: '', query: raw };
 }
 
 function defaultFixedGrams(food) {
@@ -232,17 +253,19 @@ document.addEventListener('click', event => {
   if (addStaple) {
     persistCurrentAssessmentFields();
     const input = $('stapleFoodSearch');
-    const food = findValidatedFood(input?.value);
-    if (!food) { showToast('Selecione um alimento existente na base validada.'); return; }
+    const resolved = resolveStapleInput(input?.value);
+    if (!resolved) { showToast('Digite pelo menos parte do nome de um alimento existente na base validada.'); return; }
     const staples = Array.isArray(state.profile.staples) ? state.profile.staples : [];
-    if (staples.some(item => item.foodId === food.id)) { showToast('Este alimento já está nos seus indispensáveis.'); return; }
+    const identity = resolved.foodId || `query:${normalizedSearchText(resolved.query)}`;
+    const alreadyExists = staples.some(item => (item.foodId || `query:${normalizedSearchText(item.query)}`) === identity);
+    if (alreadyExists) { showToast('Este alimento já está nos seus indispensáveis.'); return; }
     if (staples.length >= 8) { showToast('Você pode selecionar até 8 alimentos indispensáveis.'); return; }
     state.profile = saveProfile({
       ...state.profile,
-      staples: [...staples, { foodId: food.id, meal: 'breakfast', frequency: 7, mode: 'adjust', grams: null }]
+      staples: [...staples, { ...resolved, meal: 'breakfast', frequency: 7, mode: 'adjust', grams: null }]
     });
     renderAssessmentScreen();
-    showToast('Alimento adicionado aos indispensáveis.');
+    showToast(resolved.query ? `${resolved.query} adicionado como escolha flexível.` : 'Alimento adicionado aos indispensáveis.');
     return;
   }
 
@@ -297,7 +320,8 @@ document.addEventListener('change', event => {
   if (modeField.value === 'fixed' && row) {
     const staples = Array.isArray(state.profile.staples) ? [...state.profile.staples] : [];
     const index = [...document.querySelectorAll('[data-staple-row]')].indexOf(row);
-    const food = (state.foods.validated || []).find(item => item.id === staples[index]?.foodId);
+    const food = (state.foods.validated || []).find(item => item.id === staples[index]?.foodId)
+      || validatedFoodMatches(staples[index]?.query)[0];
     if (staples[index] && !Number(staples[index].grams)) staples[index] = { ...staples[index], grams: defaultFixedGrams(food) };
     state.profile = saveProfile({ ...state.profile, staples });
   }
