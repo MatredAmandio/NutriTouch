@@ -1,9 +1,10 @@
 import { DAYS } from './generator.js';
 import { QUANTIFIED_RECIPES } from './quantified-library.js';
-import { buildFoodIndex, mealShares, scaleRecipeToTarget, addNutrients } from './nutrition.js';
+import { buildFoodIndex, mealShares, scaleRecipeToTarget, addNutrients, nutrientsFor } from './nutrition.js';
 
 const STYLE_PREFERENCES = new Set(['brasileira', 'mediterranea', 'fitness', 'vegetariana', 'vegana']);
 const BRAZILIAN_BREAD_BREAKFAST_DAYS = new Set([0, 2, 5]);
+const STAPLE_MEALS = new Set(['any', 'breakfast', 'lunch', 'snack', 'dinner']);
 
 function hashSeed(text) {
   let h = 2166136261;
@@ -95,6 +96,88 @@ function chooseRecipe(pool, dayIndex, slotIndex, seed, used) {
   return pool[start];
 }
 
+function stapleCompatible(food, profile) {
+  if (!food) return false;
+  const preference = profile.preferences || 'brasileira';
+  const compatibility = food.diet_compatibility || {};
+  if (preference === 'vegana' && compatibility.vegan !== 'allowed') return false;
+  if (preference === 'vegetariana' && compatibility.vegetarian !== 'allowed') return false;
+  if (profile.intolerance === 'lactose' && !String(compatibility.lactose_free || '').startsWith('allowed')) return false;
+  const glutenRestricted = preference === 'sem-gluten' || ['gluten_intolerance','ncgs'].includes(profile.intolerance);
+  if (glutenRestricted && compatibility.gluten_free !== 'allowed') return false;
+
+  const terms = normalizedTerms(profile);
+  if (!terms.length) return true;
+  const searchable = `${food.name || ''} ${(food.aliases || []).join(' ')} ${(food.allergens || []).join(' ')}`.toLowerCase();
+  return !terms.some(term => searchable.includes(term));
+}
+
+function stapleScheduleMatches(staple, dayIndex) {
+  const frequency = Math.max(1, Math.min(7, Math.round(Number(staple.frequency) || 7)));
+  if (frequency >= 7) return true;
+  const offset = hashSeed(staple.foodId) % 7;
+  const days = new Set(Array.from({length: frequency}, (_, index) => (Math.floor(index * 7 / frequency) + offset) % 7));
+  return days.has(dayIndex);
+}
+
+function preferredMealForFood(food, slots) {
+  const available = new Set(slots.map(([, kind]) => kind));
+  const text = `${food?.group || ''} ${(food?.tags || []).join(' ')} ${food?.name || ''}`.toLowerCase();
+  if (/bebida|beverage|café|cafe|chá|cha|pão|pao|torrada/.test(text) && available.has('breakfast')) return 'breakfast';
+  if (/fruta|fruit/.test(text) && available.has('snack')) return 'snack';
+  if (/arroz|feijão|feijao|massa|macarr|batata|mandioca|carne|frango|peixe/.test(text) && available.has('lunch')) return 'lunch';
+  return slots[0]?.[1] || 'breakfast';
+}
+
+function roundTo5(value) {
+  return Math.max(5, Math.round(Number(value || 0) / 5) * 5);
+}
+
+function adjustableStapleGrams(food, dailyTarget, mealShare) {
+  const household = Number(food?.household_measures?.[0]?.grams);
+  const text = `${food?.group || ''} ${(food?.tags || []).join(' ')}`.toLowerCase();
+  if (/bebida|beverage/.test(text) && Number.isFinite(household) && household > 0) return household;
+
+  const kcal100 = Number(food?.nutrition?.energy_kcal);
+  if (!Number.isFinite(kcal100) || kcal100 <= 0) return Number.isFinite(household) && household > 0 ? household : 50;
+  const desiredKcal = Math.min(180, Math.max(50, Number(dailyTarget) * Number(mealShare || 0.2) * 0.24));
+  let grams = desiredKcal / (kcal100 / 100);
+  const upper = /fruta|fruit/.test(text) ? 250 : 180;
+  grams = Math.max(15, Math.min(upper, grams));
+  return roundTo5(grams);
+}
+
+function buildDayStaples(profile, foodIndex, dayIndex, dailyTarget, slots, shares) {
+  const raw = Array.isArray(profile.staples) ? profile.staples : [];
+  return raw.map(staple => {
+    const food = foodIndex.get(staple.foodId);
+    if (!food || !stapleCompatible(food, profile) || !stapleScheduleMatches(staple, dayIndex)) return null;
+    const requestedMeal = STAPLE_MEALS.has(staple.meal) ? staple.meal : 'breakfast';
+    const meal = requestedMeal === 'any' ? preferredMealForFood(food, slots) : requestedMeal;
+    const slotIndex = Math.max(0, slots.findIndex(([, kind]) => kind === meal));
+    const share = shares[slotIndex] || shares[0] || 0.2;
+    const fixed = staple.mode === 'fixed' && Number(staple.grams) > 0;
+    const grams = fixed
+      ? Math.max(5, Math.min(1000, Number(staple.grams)))
+      : adjustableStapleGrams(food, dailyTarget, share);
+    return {
+      foodId: food.id,
+      name: food.name,
+      meal,
+      grams,
+      fixed,
+      nutrients: nutrientsFor(food, grams)
+    };
+  }).filter(Boolean);
+}
+
+function avoidStapleDuplicates(pool, staples = []) {
+  if (!staples.length) return pool;
+  const ids = new Set(staples.map(item => item.foodId));
+  const filtered = pool.filter(recipe => !recipe.ingredients.some(item => ids.has(item.foodId)));
+  return filtered.length ? filtered : pool;
+}
+
 export function canGenerateQuantifiedPlan(foods = []) {
   const ids = new Set((foods || []).map(food => food.id));
   return QUANTIFIED_RECIPES.some(recipe => recipe.ingredients.every(item => ids.has(item.foodId)));
@@ -119,27 +202,52 @@ export function generateQuantifiedWeeklyPlan(profile, foods, targetKcal, date = 
   if (slots.some(([,kind]) => !pools[kind]?.length)) return null;
 
   return DAYS.map((day, dayIndex) => {
+    const dayStaples = buildDayStaples(profile, foodIndex, dayIndex, targetKcal, slots, shares);
+    const stapleEnergy = dayStaples.reduce((sum, item) => sum + (Number(item.nutrients?.energy_kcal) || 0), 0);
+    const regularBudget = Math.max(0, Number(targetKcal) - stapleEnergy);
     const usedByKind = new Map();
+
     const meals = slots.map(([label, kind], slotIndex) => {
       if (!usedByKind.has(kind)) usedByKind.set(kind, new Set());
-      const slotPool = poolForSlot(pools[kind], kind, dayIndex, profile, foodIndex);
+      const staplesForMeal = dayStaples.filter(item => item.meal === kind);
+      let slotPool = poolForSlot(pools[kind], kind, dayIndex, profile, foodIndex);
+      slotPool = avoidStapleDuplicates(slotPool, staplesForMeal);
       const recipe = chooseRecipe(slotPool, dayIndex, slotIndex, seed, usedByKind.get(kind));
       usedByKind.get(kind).add(recipe.id);
-      const target = Number(targetKcal) * shares[slotIndex];
-      const quantified = scaleRecipeToTarget(recipe, target, foodIndex);
+
+      const regularTarget = regularBudget * shares[slotIndex];
+      const quantified = scaleRecipeToTarget(recipe, regularTarget, foodIndex, { minFactor: 0.15, maxFactor: 1.6 });
+      const stapleIngredients = staplesForMeal.map(item => ({
+        foodId: item.foodId,
+        name: item.name,
+        grams: item.grams,
+        nutrients: item.nutrients,
+        isStaple: true,
+        fixed: item.fixed
+      }));
+      const ingredients = [...(quantified?.ingredients || []), ...stapleIngredients];
+      const nutrients = addNutrients(ingredients.map(item => item.nutrients));
+      const components = [
+        ...(quantified?.ingredients || []).map(item => `${item.grams} g ${item.name}`),
+        ...stapleIngredients.map(item => `${item.grams} g ${item.name} · indispensável`)
+      ];
+
       return {
         label, kind, role: roles[slotIndex],
-        meal: { id: recipe.id, title: recipe.title, flags: recipe.flags || [], components: quantified.ingredients.map(item => `${item.grams} g ${item.name}`) },
-        ingredients: quantified.ingredients,
-        nutrients: quantified.nutrients,
-        targetKcal: target
+        meal: { id: recipe.id, title: recipe.title, flags: recipe.flags || [], components },
+        ingredients,
+        nutrients,
+        targetKcal: Number(targetKcal) * shares[slotIndex],
+        staples: stapleIngredients
       };
     });
+
     return {
       day,
       meals,
       nutrients: addNutrients(meals.map(meal => meal.nutrients)),
-      nutrientStatus: 'validated-food-calculation'
+      nutrientStatus: 'validated-food-calculation',
+      staplesApplied: dayStaples.map(item => ({ foodId: item.foodId, name: item.name, meal: item.meal, grams: item.grams, fixed: item.fixed }))
     };
   });
 }
